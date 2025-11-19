@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+option go_package = "https://github.com/StarryBadger/tapestry/src/api/proto";
+
+message Nothing {}
+service NodeService {
+    rpc Ping(Nothing) returns (Nothing);
+}
