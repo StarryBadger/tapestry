@@ -4,26 +4,35 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math/rand"
 	"net"
 	"sync"
-	"math/rand"
 	"time"
-	"google.golang.org/grpc"
+
 	pb "tapestry/api/proto"
 	"tapestry/internal/util"
+
+	"google.golang.org/grpc"
 )
+
 
 type Node struct {
 	pb.UnimplementedNodeServiceServer
 
-	ID  uint64
-	Port int
-	GrpcServer *grpc.Server
-	Listener net.Listener
+	ID           uint64
+	Port         int
+	GrpcServer   *grpc.Server
+	Listener     net.Listener
 	RoutingTable [][]int
-	Backpointers *util.BackPointerTable 
-	rtLock sync.RWMutex
-	bpLock sync.RWMutex
+	Backpointers *util.BackPointerTable
+
+	Objects           map[uint64]Object          
+	ObjectPublishers  map[uint64]map[int]struct{} 
+
+	rtLock         sync.RWMutex
+	bpLock         sync.RWMutex
+	objectsLock    sync.RWMutex 
+	publishersLock sync.RWMutex 
 }
 
 func NewNode(port int) (*Node, error) {
@@ -34,28 +43,30 @@ func NewNode(port int) (*Node, error) {
 	}
 
 	rt := make([][]int, util.DIGITS)
-	for i := 0; i< util.DIGITS; i++ {
+	for i := 0; i < util.DIGITS; i++ {
 		rt[i] = make([]int, util.RADIX)
-		for j := 0; j< util.RADIX; j++ {
+		for j := 0; j < util.RADIX; j++ {
 			rt[i][j] = -1
-		}	
+		}
 	}
+
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 	nodeID := rng.Uint64()
 
-	node := &Node{
-		ID:        nodeID,
-		Port:      listener.Addr().(*net.TCPAddr).Port,
-		GrpcServer: grpc.NewServer(),
-		Listener:  listener,
-		RoutingTable: rt,
-		Backpointers: util.NewBackPointerTable(), 
+	n := &Node{
+		ID:               nodeID,
+		Port:             listener.Addr().(*net.TCPAddr).Port,
+		GrpcServer:       grpc.NewServer(),
+		Listener:         listener,
+		RoutingTable:     rt,
+		Backpointers:     util.NewBackPointerTable(),
+		Objects:          make(map[uint64]Object),          
+		ObjectPublishers: make(map[uint64]map[int]struct{}), 
 	}
 
-	pb.RegisterNodeServiceServer(node.GrpcServer, node)
-
-	log.Printf("Node created with ID %d on port %d", node.ID, node.Port)
-	return node, nil
+	pb.RegisterNodeServiceServer(n.GrpcServer, n)
+	log.Printf("Node created with ID %v on port %d", n.ID, n.Port)
+	return n, nil
 }
 
 func (node *Node) Start() error {

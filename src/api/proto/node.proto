@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "https://github.com/StarryBadger/tapestry/src/api/proto";
+option go_package = "tapestry/api/proto";
 
 message Nothing {}
 
@@ -65,6 +65,46 @@ message BPRemoveResponse {
     bool Success = 1;
 }
 
+message Object {
+    string Name = 1;
+    string Content = 2;
+}
+
+message Ack {
+    bool Success = 1;
+}
+
+message RegisterRequest {
+    int32 Port = 1;
+    uint64 ObjectID = 2;
+}
+
+message RegisterResponse {}
+
+message LookupRequest {
+    uint64 ObjectID = 1;
+}
+
+message LookupResponse {
+    int32 Port = 1; // -1 if not found
+}
+
+message ObjectRequest {
+    uint64 ObjectID = 1;
+}
+
+message ObjectResponse {
+    string Name = 1;
+    string Content = 2;
+}
+
+message RemoveObjectRequest {
+    uint64 ObjectID = 1;
+}
+
+message RemoveObjectResponse {}
+
+
 service NodeService {
     rpc Ping(Nothing) returns (Nothing);
     rpc Route(RouteRequest) returns (RouteResponse);
@@ -74,4 +114,11 @@ service NodeService {
     rpc GetID(GetIDRequest) returns (GetIDResponse);
     rpc RTUpdate(RTUpdateRequest) returns (RTUpdateResponse);
     rpc BPRemove(BPRemoveRequest) returns (BPRemoveResponse);
+
+    rpc Register(RegisterRequest) returns (RegisterResponse);
+    rpc UnRegister(RegisterRequest) returns (RegisterResponse); // Uses the same message
+    rpc Lookup(LookupRequest) returns (LookupResponse);
+    rpc GetObject(ObjectRequest) returns (ObjectResponse);
+    rpc StoreObject(Object) returns (Ack);
+    rpc RemoveObject(RemoveObjectRequest) returns (RemoveObjectResponse);
 }
