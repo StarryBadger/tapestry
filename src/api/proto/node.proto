@@ -3,6 +3,18 @@ syntax = "proto3";
 option go_package = "https://github.com/StarryBadger/tapestry/src/api/proto";
 
 message Nothing {}
+
+message RouteRequest {
+    uint64 ID = 1;
+    int Level = 2;
+}
+
+message RouteResponse {
+    uint64 ID = 1;
+    int Port = 2;
+}
+
 service NodeService {
     rpc Ping(Nothing) returns (Nothing);
+    rpc Route(RouteRequest) returns (RouteResponse);
 }

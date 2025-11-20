@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"flag"
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -12,64 +10,73 @@ import (
 
 	pb "tapestry/api/proto"
 	"tapestry/internal/node"
-
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 func main() {
-	portPtr := flag.Int("port", 0, "Port to listen on")
-	flag.Parse()
-	fmt.Printf("Starting node on port %d...\n", *portPtr)
+	nodeA, err := node.NewNode(8000)
+	if err != nil { log.Fatalf("Failed to create nodeA: %v", err) }
+	nodeB, err := node.NewNode(8001)
+	if err != nil { log.Fatalf("Failed to create nodeB: %v", err) }
+	nodeC, err := node.NewNode(8002)
+	if err != nil { log.Fatalf("Failed to create nodeC: %v", err) }
 
-	n , err := node.NewNode(*portPtr)
-	if err != nil {
-		log.Fatalf("Failed to create node: %v", err)
-	}
+	nodeA.ID = 0
+	nodeB.ID = 1
+	nodeC.ID = 2
+	log.Printf("Node A initialized with ID %v on Port %d", nodeA.ID, nodeA.Port)
+	log.Printf("Node B initialized with ID %v on Port %d", nodeB.ID, nodeB.Port)
+	log.Printf("Node C initialized with ID %v on Port %d", nodeC.ID, nodeC.Port)
 
-	go func() {
-		if err := n.Start(); err != nil {
-			log.Fatalf("Failed to start node: %v", err)
-		}
-	}()
+	log.Println("Configuring routing tables...")
+	nodeA.RoutingTable[0][1] = nodeB.Port 
+	nodeA.RoutingTable[0][2] = nodeC.Port 
 
+	nodeB.RoutingTable[0][0] = nodeA.Port 
+	nodeB.RoutingTable[0][2] = nodeC.Port 
+
+	nodeC.RoutingTable[0][0] = nodeA.Port 
+	nodeC.RoutingTable[0][1] = nodeB.Port 
+
+	log.Println("Starting all nodes...")
+	go nodeA.Start()
+	go nodeB.Start()
+	go nodeC.Start()
 	time.Sleep(2 * time.Second)
-	testPing(n.Port)
 
+	var targetID uint64 = 6
+	testRoute(nodeA, targetID)
+
+	log.Println("Network is running. Press Ctrl+C to shut down.")
 	shutdownChan := make(chan os.Signal, 1)
 	signal.Notify(shutdownChan, syscall.SIGINT, syscall.SIGTERM)
-
 	<-shutdownChan
 
-	log.Println("Shutdown signal received, stopping node...")
-	n.Stop()
-	log.Println("Node stopped.")
-
+	log.Println("Shutting down all nodes...")
+	nodeA.Stop()
+	nodeB.Stop()
+	nodeC.Stop()
 }
 
-func testPing(port int) {
-	log.Println("--- [Test Client] Starting Ping Test ---")
-	addr := fmt.Sprintf("localhost:%d", port)
-	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+func testRoute(startNode *node.Node, targetId uint64) {
+	log.Printf("--- [Test Client] Asking Node %v to find root for %v ---", startNode.ID, targetId)
+
+	client, conn, err := node.GetNodeClient(startNode.Port)
 	if err != nil {
-		log.Printf("[Test Client] Could not connect to %s: %v", addr, err)
-		return
+		log.Fatalf("[Test Client] Failed to connect to start node: %v", err)
 	}
 	defer conn.Close()
 
-	client := pb.NewNodeServiceClient(conn)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
 
-	log.Printf("[Test Client] Sending Ping to %s...", addr)
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-	defer cancel() 
-
-	_, err = client.Ping(ctx, &pb.Nothing{})
+	res, err := client.Route(ctx, &pb.RouteRequest{
+		ID:    targetId,
+		Level: 0,
+	})
 
 	if err != nil {
-		log.Printf("[Test Client] Received an error from Ping: %v", err)
+		log.Printf("[Test Client] Route failed: %v", err)
 	} else {
-		log.Println("[Test Client] Received successful reply for Ping!")
+		log.Printf("[Test Client] SUCCESS! Route completed. Final node is %v at port %d", res.ID, res.Port)
 	}
 }
-
-  

@@ -57,14 +57,125 @@ func (*Nothing) Descriptor() ([]byte, []int) {
 	return file_api_proto_node_proto_rawDescGZIP(), []int{0}
 }
 
+type RouteRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ID            uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	Level         int32                  `protobuf:"varint,2,opt,name=Level,proto3" json:"Level,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RouteRequest) Reset() {
+	*x = RouteRequest{}
+	mi := &file_api_proto_node_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RouteRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RouteRequest) ProtoMessage() {}
+
+func (x *RouteRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_node_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RouteRequest.ProtoReflect.Descriptor instead.
+func (*RouteRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_node_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *RouteRequest) GetID() uint64 {
+	if x != nil {
+		return x.ID
+	}
+	return 0
+}
+
+func (x *RouteRequest) GetLevel() int32 {
+	if x != nil {
+		return x.Level
+	}
+	return 0
+}
+
+type RouteResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ID            uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	Port          int32                  `protobuf:"varint,2,opt,name=Port,proto3" json:"Port,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RouteResponse) Reset() {
+	*x = RouteResponse{}
+	mi := &file_api_proto_node_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RouteResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RouteResponse) ProtoMessage() {}
+
+func (x *RouteResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_node_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RouteResponse.ProtoReflect.Descriptor instead.
+func (*RouteResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_node_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *RouteResponse) GetID() uint64 {
+	if x != nil {
+		return x.ID
+	}
+	return 0
+}
+
+func (x *RouteResponse) GetPort() int32 {
+	if x != nil {
+		return x.Port
+	}
+	return 0
+}
+
 var File_api_proto_node_proto protoreflect.FileDescriptor
 
 const file_api_proto_node_proto_rawDesc = "" +
 	"\n" +
 	"\x14api/proto/node.proto\"\t\n" +
-	"\aNothing2)\n" +
+	"\aNothing\"4\n" +
+	"\fRouteRequest\x12\x0e\n" +
+	"\x02ID\x18\x01 \x01(\x04R\x02ID\x12\x14\n" +
+	"\x05Level\x18\x02 \x01(\x05R\x05Level\"3\n" +
+	"\rRouteResponse\x12\x0e\n" +
+	"\x02ID\x18\x01 \x01(\x04R\x02ID\x12\x12\n" +
+	"\x04Port\x18\x02 \x01(\x05R\x04Port2Q\n" +
 	"\vNodeService\x12\x1a\n" +
-	"\x04Ping\x12\b.Nothing\x1a\b.NothingB8Z6https://github.com/StarryBadger/tapestry/src/api/protob\x06proto3"
+	"\x04Ping\x12\b.Nothing\x1a\b.Nothing\x12&\n" +
+	"\x05Route\x12\r.RouteRequest\x1a\x0e.RouteResponseB8Z6https://github.com/StarryBadger/tapestry/src/api/protob\x06proto3"
 
 var (
 	file_api_proto_node_proto_rawDescOnce sync.Once
@@ -78,15 +189,19 @@ func file_api_proto_node_proto_rawDescGZIP() []byte {
 	return file_api_proto_node_proto_rawDescData
 }
 
-var file_api_proto_node_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_api_proto_node_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_api_proto_node_proto_goTypes = []any{
-	(*Nothing)(nil), // 0: Nothing
+	(*Nothing)(nil),       // 0: Nothing
+	(*RouteRequest)(nil),  // 1: RouteRequest
+	(*RouteResponse)(nil), // 2: RouteResponse
 }
 var file_api_proto_node_proto_depIdxs = []int32{
 	0, // 0: NodeService.Ping:input_type -> Nothing
-	0, // 1: NodeService.Ping:output_type -> Nothing
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
+	1, // 1: NodeService.Route:input_type -> RouteRequest
+	0, // 2: NodeService.Ping:output_type -> Nothing
+	2, // 3: NodeService.Route:output_type -> RouteResponse
+	2, // [2:4] is the sub-list for method output_type
+	0, // [0:2] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -103,7 +218,7 @@ func file_api_proto_node_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_proto_node_proto_rawDesc), len(file_api_proto_node_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   1,
+			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
