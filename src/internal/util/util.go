@@ -46,3 +46,48 @@ func StringToHash(s string) uint64 {
 	}
 	return h
 }
+
+func Assert(condition bool, msg string) {
+	if !condition {
+		log.Panic("Assertion failed: " + msg)
+	}
+}
+
+// convert a 2D slice of ints into a 1D slice of int32s for proto messages.
+func FlattenMatrix(matrix [][]int) []int32 {
+	var flat []int32
+	for _, row := range matrix {
+		for _, val := range row {
+			flat = append(flat, int32(val))
+		}
+	}
+	return flat
+}
+
+// convert a 1D slice of int32s back into a 2D slice of ints
+func UnflattenMatrix(flat []int32, rows, cols int) [][]int {
+	Assert(len(flat) == rows*cols, "data length does not match rows * cols")
+
+	matrix := make([][]int, rows)
+	for i := 0; i < rows; i++ {
+		start := i * cols
+		row := make([]int, cols)
+		for j := 0; j < cols; j++ {
+			row[j] = int(flat[start+j])
+		}
+		matrix[i] = row
+	}
+	return matrix
+}
+
+func CommonPrefixLen(a, b uint64) int {
+	len := 0
+	for i := 0; i < DIGITS; i++ {
+		if GetDigit(a, i) == GetDigit(b, i) {
+			len++
+		} else {
+			break
+		}
+	}
+	return len
+}

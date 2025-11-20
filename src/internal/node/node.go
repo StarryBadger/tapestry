@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"sync"
 	"math/rand"
 	"time"
 	"google.golang.org/grpc"
@@ -20,9 +21,12 @@ type Node struct {
 	GrpcServer *grpc.Server
 	Listener net.Listener
 	RoutingTable [][]int
+	Backpointers *util.BackPointerTable 
+	rtLock sync.RWMutex
+	bpLock sync.RWMutex
 }
 
-func NewNode(port int32) (*Node, error) {
+func NewNode(port int) (*Node, error) {
 	addr := fmt.Sprintf(":%d", port)
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
@@ -45,6 +49,7 @@ func NewNode(port int32) (*Node, error) {
 		GrpcServer: grpc.NewServer(),
 		Listener:  listener,
 		RoutingTable: rt,
+		Backpointers: util.NewBackPointerTable(), 
 	}
 
 	pb.RegisterNodeServiceServer(node.GrpcServer, node)

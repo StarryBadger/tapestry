@@ -19,8 +19,14 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	NodeService_Ping_FullMethodName  = "/NodeService/Ping"
-	NodeService_Route_FullMethodName = "/NodeService/Route"
+	NodeService_Ping_FullMethodName                = "/NodeService/Ping"
+	NodeService_Route_FullMethodName               = "/NodeService/Route"
+	NodeService_RTCopy_FullMethodName              = "/NodeService/RTCopy"
+	NodeService_InformHoleMulticast_FullMethodName = "/NodeService/InformHoleMulticast"
+	NodeService_BPUpdate_FullMethodName            = "/NodeService/BPUpdate"
+	NodeService_GetID_FullMethodName               = "/NodeService/GetID"
+	NodeService_RTUpdate_FullMethodName            = "/NodeService/RTUpdate"
+	NodeService_BPRemove_FullMethodName            = "/NodeService/BPRemove"
 )
 
 // NodeServiceClient is the client API for NodeService service.
@@ -29,6 +35,12 @@ const (
 type NodeServiceClient interface {
 	Ping(ctx context.Context, in *Nothing, opts ...grpc.CallOption) (*Nothing, error)
 	Route(ctx context.Context, in *RouteRequest, opts ...grpc.CallOption) (*RouteResponse, error)
+	RTCopy(ctx context.Context, in *Nothing, opts ...grpc.CallOption) (*RTCopyResponse, error)
+	InformHoleMulticast(ctx context.Context, in *MulticastRequest, opts ...grpc.CallOption) (*MulticastResponse, error)
+	BPUpdate(ctx context.Context, in *BPUpdateRequest, opts ...grpc.CallOption) (*BPUpdateResponse, error)
+	GetID(ctx context.Context, in *GetIDRequest, opts ...grpc.CallOption) (*GetIDResponse, error)
+	RTUpdate(ctx context.Context, in *RTUpdateRequest, opts ...grpc.CallOption) (*RTUpdateResponse, error)
+	BPRemove(ctx context.Context, in *BPRemoveRequest, opts ...grpc.CallOption) (*BPRemoveResponse, error)
 }
 
 type nodeServiceClient struct {
@@ -59,12 +71,78 @@ func (c *nodeServiceClient) Route(ctx context.Context, in *RouteRequest, opts ..
 	return out, nil
 }
 
+func (c *nodeServiceClient) RTCopy(ctx context.Context, in *Nothing, opts ...grpc.CallOption) (*RTCopyResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RTCopyResponse)
+	err := c.cc.Invoke(ctx, NodeService_RTCopy_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *nodeServiceClient) InformHoleMulticast(ctx context.Context, in *MulticastRequest, opts ...grpc.CallOption) (*MulticastResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MulticastResponse)
+	err := c.cc.Invoke(ctx, NodeService_InformHoleMulticast_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *nodeServiceClient) BPUpdate(ctx context.Context, in *BPUpdateRequest, opts ...grpc.CallOption) (*BPUpdateResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(BPUpdateResponse)
+	err := c.cc.Invoke(ctx, NodeService_BPUpdate_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *nodeServiceClient) GetID(ctx context.Context, in *GetIDRequest, opts ...grpc.CallOption) (*GetIDResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetIDResponse)
+	err := c.cc.Invoke(ctx, NodeService_GetID_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *nodeServiceClient) RTUpdate(ctx context.Context, in *RTUpdateRequest, opts ...grpc.CallOption) (*RTUpdateResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RTUpdateResponse)
+	err := c.cc.Invoke(ctx, NodeService_RTUpdate_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *nodeServiceClient) BPRemove(ctx context.Context, in *BPRemoveRequest, opts ...grpc.CallOption) (*BPRemoveResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(BPRemoveResponse)
+	err := c.cc.Invoke(ctx, NodeService_BPRemove_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // NodeServiceServer is the server API for NodeService service.
 // All implementations must embed UnimplementedNodeServiceServer
 // for forward compatibility.
 type NodeServiceServer interface {
 	Ping(context.Context, *Nothing) (*Nothing, error)
 	Route(context.Context, *RouteRequest) (*RouteResponse, error)
+	RTCopy(context.Context, *Nothing) (*RTCopyResponse, error)
+	InformHoleMulticast(context.Context, *MulticastRequest) (*MulticastResponse, error)
+	BPUpdate(context.Context, *BPUpdateRequest) (*BPUpdateResponse, error)
+	GetID(context.Context, *GetIDRequest) (*GetIDResponse, error)
+	RTUpdate(context.Context, *RTUpdateRequest) (*RTUpdateResponse, error)
+	BPRemove(context.Context, *BPRemoveRequest) (*BPRemoveResponse, error)
 	mustEmbedUnimplementedNodeServiceServer()
 }
 
@@ -80,6 +158,24 @@ func (UnimplementedNodeServiceServer) Ping(context.Context, *Nothing) (*Nothing,
 }
 func (UnimplementedNodeServiceServer) Route(context.Context, *RouteRequest) (*RouteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Route not implemented")
+}
+func (UnimplementedNodeServiceServer) RTCopy(context.Context, *Nothing) (*RTCopyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RTCopy not implemented")
+}
+func (UnimplementedNodeServiceServer) InformHoleMulticast(context.Context, *MulticastRequest) (*MulticastResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method InformHoleMulticast not implemented")
+}
+func (UnimplementedNodeServiceServer) BPUpdate(context.Context, *BPUpdateRequest) (*BPUpdateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BPUpdate not implemented")
+}
+func (UnimplementedNodeServiceServer) GetID(context.Context, *GetIDRequest) (*GetIDResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetID not implemented")
+}
+func (UnimplementedNodeServiceServer) RTUpdate(context.Context, *RTUpdateRequest) (*RTUpdateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RTUpdate not implemented")
+}
+func (UnimplementedNodeServiceServer) BPRemove(context.Context, *BPRemoveRequest) (*BPRemoveResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BPRemove not implemented")
 }
 func (UnimplementedNodeServiceServer) mustEmbedUnimplementedNodeServiceServer() {}
 func (UnimplementedNodeServiceServer) testEmbeddedByValue()                     {}
@@ -138,6 +234,114 @@ func _NodeService_Route_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _NodeService_RTCopy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Nothing)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NodeServiceServer).RTCopy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NodeService_RTCopy_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NodeServiceServer).RTCopy(ctx, req.(*Nothing))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NodeService_InformHoleMulticast_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MulticastRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NodeServiceServer).InformHoleMulticast(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NodeService_InformHoleMulticast_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NodeServiceServer).InformHoleMulticast(ctx, req.(*MulticastRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NodeService_BPUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BPUpdateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NodeServiceServer).BPUpdate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NodeService_BPUpdate_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NodeServiceServer).BPUpdate(ctx, req.(*BPUpdateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NodeService_GetID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NodeServiceServer).GetID(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NodeService_GetID_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NodeServiceServer).GetID(ctx, req.(*GetIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NodeService_RTUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RTUpdateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NodeServiceServer).RTUpdate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NodeService_RTUpdate_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NodeServiceServer).RTUpdate(ctx, req.(*RTUpdateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NodeService_BPRemove_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BPRemoveRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NodeServiceServer).BPRemove(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NodeService_BPRemove_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NodeServiceServer).BPRemove(ctx, req.(*BPRemoveRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // NodeService_ServiceDesc is the grpc.ServiceDesc for NodeService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -152,6 +356,30 @@ var NodeService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Route",
 			Handler:    _NodeService_Route_Handler,
+		},
+		{
+			MethodName: "RTCopy",
+			Handler:    _NodeService_RTCopy_Handler,
+		},
+		{
+			MethodName: "InformHoleMulticast",
+			Handler:    _NodeService_InformHoleMulticast_Handler,
+		},
+		{
+			MethodName: "BPUpdate",
+			Handler:    _NodeService_BPUpdate_Handler,
+		},
+		{
+			MethodName: "GetID",
+			Handler:    _NodeService_GetID_Handler,
+		},
+		{
+			MethodName: "RTUpdate",
+			Handler:    _NodeService_RTUpdate_Handler,
+		},
+		{
+			MethodName: "BPRemove",
+			Handler:    _NodeService_BPRemove_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

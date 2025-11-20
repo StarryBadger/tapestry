@@ -1,82 +1,63 @@
 package main
 
 import (
-	"context"
+	"bufio"
+	"flag"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	pb "tapestry/api/proto"
 	"tapestry/internal/node"
 )
 
 func main() {
-	nodeA, err := node.NewNode(8000)
-	if err != nil { log.Fatalf("Failed to create nodeA: %v", err) }
-	nodeB, err := node.NewNode(8001)
-	if err != nil { log.Fatalf("Failed to create nodeB: %v", err) }
-	nodeC, err := node.NewNode(8002)
-	if err != nil { log.Fatalf("Failed to create nodeC: %v", err) }
+	portPtr := flag.Int("port", 0, "Port for the node to listen on (0 for random).")
+	bootPtr := flag.Int("boot", 0, "Bootstrap node port to connect to (0 for a new network).")
+	flag.Parse()
+	n, err := node.NewNode(*portPtr)
+	if err != nil {
+		log.Fatalf("Failed to create node: %v", err)
+	}
 
-	nodeA.ID = 0
-	nodeB.ID = 1
-	nodeC.ID = 2
-	log.Printf("Node A initialized with ID %v on Port %d", nodeA.ID, nodeA.Port)
-	log.Printf("Node B initialized with ID %v on Port %d", nodeB.ID, nodeB.Port)
-	log.Printf("Node C initialized with ID %v on Port %d", nodeC.ID, nodeC.Port)
+	go func() {
+		if err := n.Start(); err != nil {
+			log.Fatalf("gRPC server failed: %v", err)
+		}
+	}()
 
-	log.Println("Configuring routing tables...")
-	nodeA.RoutingTable[0][1] = nodeB.Port 
-	nodeA.RoutingTable[0][2] = nodeC.Port 
+	log.Printf("Attempting to join network via bootstrap port %d...", *bootPtr)
+	err = n.Insert(*bootPtr)
+	if err != nil {
+		log.Fatalf("Failed to join network: %v", err)
+	}
+	log.Println("Successfully joined network.")
 
-	nodeB.RoutingTable[0][0] = nodeA.Port 
-	nodeB.RoutingTable[0][2] = nodeC.Port 
-
-	nodeC.RoutingTable[0][0] = nodeA.Port 
-	nodeC.RoutingTable[0][1] = nodeB.Port 
-
-	log.Println("Starting all nodes...")
-	go nodeA.Start()
-	go nodeB.Start()
-	go nodeC.Start()
-	time.Sleep(2 * time.Second)
-
-	var targetID uint64 = 6
-	testRoute(nodeA, targetID)
-
-	log.Println("Network is running. Press Ctrl+C to shut down.")
 	shutdownChan := make(chan os.Signal, 1)
 	signal.Notify(shutdownChan, syscall.SIGINT, syscall.SIGTERM)
-	<-shutdownChan
 
-	log.Println("Shutting down all nodes...")
-	nodeA.Stop()
-	nodeB.Stop()
-	nodeC.Stop()
-}
+	fmt.Println("\nNode is running. Enter 'exit' or press Ctrl+C to leave.")
+	scanner := bufio.NewScanner(os.Stdin)
+	inputChan := make(chan string, 1)
+	go func() {
+		if scanner.Scan() {
+			inputChan <- scanner.Text()
+		}
+	}()
 
-func testRoute(startNode *node.Node, targetId uint64) {
-	log.Printf("--- [Test Client] Asking Node %v to find root for %v ---", startNode.ID, targetId)
-
-	client, conn, err := node.GetNodeClient(startNode.Port)
-	if err != nil {
-		log.Fatalf("[Test Client] Failed to connect to start node: %v", err)
+	select {
+	case <-shutdownChan:
+		log.Println("Shutdown signal received.")
+	case input := <-inputChan:
+		if input == "exit" {
+			log.Println("'exit' command received.")
+		}
 	}
-	defer conn.Close()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
-
-	res, err := client.Route(ctx, &pb.RouteRequest{
-		ID:    targetId,
-		Level: 0,
-	})
-
-	if err != nil {
-		log.Printf("[Test Client] Route failed: %v", err)
-	} else {
-		log.Printf("[Test Client] SUCCESS! Route completed. Final node is %v at port %d", res.ID, res.Port)
-	}
+	n.GracefulLeave()
+	time.Sleep(1 * time.Second) 
+	n.Stop()
+	log.Println("Node stopped.")
 }

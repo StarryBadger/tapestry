@@ -6,15 +6,72 @@ message Nothing {}
 
 message RouteRequest {
     uint64 ID = 1;
-    int Level = 2;
+    int32 Level = 2;
 }
 
 message RouteResponse {
     uint64 ID = 1;
-    int Port = 2;
+    int32 Port = 2;
+}
+
+message RTCopyResponse {
+    repeated int32 Data = 1;
+    int32 Rows = 2;
+    int32 Cols = 3;
+}
+
+message MulticastRequest {
+    int32 NewPort = 1;
+    uint64 NewID = 2;
+    int32 OriginalLevel = 3;
+    int32 Level = 4;
+}
+
+message MulticastResponse {
+    int32 Status = 1;
+}
+
+message BPUpdateRequest {
+    uint64 ID = 1;
+    int32 Port = 2;
+}
+
+message BPUpdateResponse {
+    bool Success = 1;
+}
+
+message GetIDRequest {}
+
+message GetIDResponse {
+    uint64 ID = 1;
+}
+
+message RTUpdateRequest {
+    uint64 ReplacementID = 1;
+    int32 ReplacementPort = 2;
+    uint64 ID = 3;
+    int32 Port = 4;
+}
+
+message RTUpdateResponse {
+    bool Success = 1;
+}
+
+message BPRemoveRequest {
+    int32 Port = 1;
+}
+
+message BPRemoveResponse {
+    bool Success = 1;
 }
 
 service NodeService {
     rpc Ping(Nothing) returns (Nothing);
     rpc Route(RouteRequest) returns (RouteResponse);
+    rpc RTCopy(Nothing) returns (RTCopyResponse);
+    rpc InformHoleMulticast(MulticastRequest) returns (MulticastResponse);
+    rpc BPUpdate(BPUpdateRequest) returns (BPUpdateResponse);
+    rpc GetID(GetIDRequest) returns (GetIDResponse);
+    rpc RTUpdate(RTUpdateRequest) returns (RTUpdateResponse);
+    rpc BPRemove(BPRemoveRequest) returns (BPRemoveResponse);
 }

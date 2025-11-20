@@ -161,6 +161,554 @@ func (x *RouteResponse) GetPort() int32 {
 	return 0
 }
 
+type RTCopyResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Data          []int32                `protobuf:"varint,1,rep,packed,name=Data,proto3" json:"Data,omitempty"`
+	Rows          int32                  `protobuf:"varint,2,opt,name=Rows,proto3" json:"Rows,omitempty"`
+	Cols          int32                  `protobuf:"varint,3,opt,name=Cols,proto3" json:"Cols,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RTCopyResponse) Reset() {
+	*x = RTCopyResponse{}
+	mi := &file_api_proto_node_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RTCopyResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RTCopyResponse) ProtoMessage() {}
+
+func (x *RTCopyResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_node_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RTCopyResponse.ProtoReflect.Descriptor instead.
+func (*RTCopyResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_node_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *RTCopyResponse) GetData() []int32 {
+	if x != nil {
+		return x.Data
+	}
+	return nil
+}
+
+func (x *RTCopyResponse) GetRows() int32 {
+	if x != nil {
+		return x.Rows
+	}
+	return 0
+}
+
+func (x *RTCopyResponse) GetCols() int32 {
+	if x != nil {
+		return x.Cols
+	}
+	return 0
+}
+
+type MulticastRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	NewPort       int32                  `protobuf:"varint,1,opt,name=NewPort,proto3" json:"NewPort,omitempty"`
+	NewID         uint64                 `protobuf:"varint,2,opt,name=NewID,proto3" json:"NewID,omitempty"`
+	OriginalLevel int32                  `protobuf:"varint,3,opt,name=OriginalLevel,proto3" json:"OriginalLevel,omitempty"`
+	Level         int32                  `protobuf:"varint,4,opt,name=Level,proto3" json:"Level,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MulticastRequest) Reset() {
+	*x = MulticastRequest{}
+	mi := &file_api_proto_node_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MulticastRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MulticastRequest) ProtoMessage() {}
+
+func (x *MulticastRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_node_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MulticastRequest.ProtoReflect.Descriptor instead.
+func (*MulticastRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_node_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *MulticastRequest) GetNewPort() int32 {
+	if x != nil {
+		return x.NewPort
+	}
+	return 0
+}
+
+func (x *MulticastRequest) GetNewID() uint64 {
+	if x != nil {
+		return x.NewID
+	}
+	return 0
+}
+
+func (x *MulticastRequest) GetOriginalLevel() int32 {
+	if x != nil {
+		return x.OriginalLevel
+	}
+	return 0
+}
+
+func (x *MulticastRequest) GetLevel() int32 {
+	if x != nil {
+		return x.Level
+	}
+	return 0
+}
+
+type MulticastResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Status        int32                  `protobuf:"varint,1,opt,name=Status,proto3" json:"Status,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MulticastResponse) Reset() {
+	*x = MulticastResponse{}
+	mi := &file_api_proto_node_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MulticastResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MulticastResponse) ProtoMessage() {}
+
+func (x *MulticastResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_node_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MulticastResponse.ProtoReflect.Descriptor instead.
+func (*MulticastResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_node_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *MulticastResponse) GetStatus() int32 {
+	if x != nil {
+		return x.Status
+	}
+	return 0
+}
+
+type BPUpdateRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ID            uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	Port          int32                  `protobuf:"varint,2,opt,name=Port,proto3" json:"Port,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BPUpdateRequest) Reset() {
+	*x = BPUpdateRequest{}
+	mi := &file_api_proto_node_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BPUpdateRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BPUpdateRequest) ProtoMessage() {}
+
+func (x *BPUpdateRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_node_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BPUpdateRequest.ProtoReflect.Descriptor instead.
+func (*BPUpdateRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_node_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *BPUpdateRequest) GetID() uint64 {
+	if x != nil {
+		return x.ID
+	}
+	return 0
+}
+
+func (x *BPUpdateRequest) GetPort() int32 {
+	if x != nil {
+		return x.Port
+	}
+	return 0
+}
+
+type BPUpdateResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=Success,proto3" json:"Success,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BPUpdateResponse) Reset() {
+	*x = BPUpdateResponse{}
+	mi := &file_api_proto_node_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BPUpdateResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BPUpdateResponse) ProtoMessage() {}
+
+func (x *BPUpdateResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_node_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BPUpdateResponse.ProtoReflect.Descriptor instead.
+func (*BPUpdateResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_node_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *BPUpdateResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+type GetIDRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetIDRequest) Reset() {
+	*x = GetIDRequest{}
+	mi := &file_api_proto_node_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetIDRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetIDRequest) ProtoMessage() {}
+
+func (x *GetIDRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_node_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetIDRequest.ProtoReflect.Descriptor instead.
+func (*GetIDRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_node_proto_rawDescGZIP(), []int{8}
+}
+
+type GetIDResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ID            uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetIDResponse) Reset() {
+	*x = GetIDResponse{}
+	mi := &file_api_proto_node_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetIDResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetIDResponse) ProtoMessage() {}
+
+func (x *GetIDResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_node_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetIDResponse.ProtoReflect.Descriptor instead.
+func (*GetIDResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_node_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *GetIDResponse) GetID() uint64 {
+	if x != nil {
+		return x.ID
+	}
+	return 0
+}
+
+type RTUpdateRequest struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	ReplacementID   uint64                 `protobuf:"varint,1,opt,name=ReplacementID,proto3" json:"ReplacementID,omitempty"`
+	ReplacementPort int32                  `protobuf:"varint,2,opt,name=ReplacementPort,proto3" json:"ReplacementPort,omitempty"`
+	ID              uint64                 `protobuf:"varint,3,opt,name=ID,proto3" json:"ID,omitempty"`
+	Port            int32                  `protobuf:"varint,4,opt,name=Port,proto3" json:"Port,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *RTUpdateRequest) Reset() {
+	*x = RTUpdateRequest{}
+	mi := &file_api_proto_node_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RTUpdateRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RTUpdateRequest) ProtoMessage() {}
+
+func (x *RTUpdateRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_node_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RTUpdateRequest.ProtoReflect.Descriptor instead.
+func (*RTUpdateRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_node_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *RTUpdateRequest) GetReplacementID() uint64 {
+	if x != nil {
+		return x.ReplacementID
+	}
+	return 0
+}
+
+func (x *RTUpdateRequest) GetReplacementPort() int32 {
+	if x != nil {
+		return x.ReplacementPort
+	}
+	return 0
+}
+
+func (x *RTUpdateRequest) GetID() uint64 {
+	if x != nil {
+		return x.ID
+	}
+	return 0
+}
+
+func (x *RTUpdateRequest) GetPort() int32 {
+	if x != nil {
+		return x.Port
+	}
+	return 0
+}
+
+type RTUpdateResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=Success,proto3" json:"Success,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RTUpdateResponse) Reset() {
+	*x = RTUpdateResponse{}
+	mi := &file_api_proto_node_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RTUpdateResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RTUpdateResponse) ProtoMessage() {}
+
+func (x *RTUpdateResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_node_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RTUpdateResponse.ProtoReflect.Descriptor instead.
+func (*RTUpdateResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_node_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *RTUpdateResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+type BPRemoveRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Port          int32                  `protobuf:"varint,1,opt,name=Port,proto3" json:"Port,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BPRemoveRequest) Reset() {
+	*x = BPRemoveRequest{}
+	mi := &file_api_proto_node_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BPRemoveRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BPRemoveRequest) ProtoMessage() {}
+
+func (x *BPRemoveRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_node_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BPRemoveRequest.ProtoReflect.Descriptor instead.
+func (*BPRemoveRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_node_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *BPRemoveRequest) GetPort() int32 {
+	if x != nil {
+		return x.Port
+	}
+	return 0
+}
+
+type BPRemoveResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=Success,proto3" json:"Success,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BPRemoveResponse) Reset() {
+	*x = BPRemoveResponse{}
+	mi := &file_api_proto_node_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BPRemoveResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BPRemoveResponse) ProtoMessage() {}
+
+func (x *BPRemoveResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_node_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BPRemoveResponse.ProtoReflect.Descriptor instead.
+func (*BPRemoveResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_node_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *BPRemoveResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
 var File_api_proto_node_proto protoreflect.FileDescriptor
 
 const file_api_proto_node_proto_rawDesc = "" +
@@ -172,10 +720,46 @@ const file_api_proto_node_proto_rawDesc = "" +
 	"\x05Level\x18\x02 \x01(\x05R\x05Level\"3\n" +
 	"\rRouteResponse\x12\x0e\n" +
 	"\x02ID\x18\x01 \x01(\x04R\x02ID\x12\x12\n" +
-	"\x04Port\x18\x02 \x01(\x05R\x04Port2Q\n" +
+	"\x04Port\x18\x02 \x01(\x05R\x04Port\"L\n" +
+	"\x0eRTCopyResponse\x12\x12\n" +
+	"\x04Data\x18\x01 \x03(\x05R\x04Data\x12\x12\n" +
+	"\x04Rows\x18\x02 \x01(\x05R\x04Rows\x12\x12\n" +
+	"\x04Cols\x18\x03 \x01(\x05R\x04Cols\"~\n" +
+	"\x10MulticastRequest\x12\x18\n" +
+	"\aNewPort\x18\x01 \x01(\x05R\aNewPort\x12\x14\n" +
+	"\x05NewID\x18\x02 \x01(\x04R\x05NewID\x12$\n" +
+	"\rOriginalLevel\x18\x03 \x01(\x05R\rOriginalLevel\x12\x14\n" +
+	"\x05Level\x18\x04 \x01(\x05R\x05Level\"+\n" +
+	"\x11MulticastResponse\x12\x16\n" +
+	"\x06Status\x18\x01 \x01(\x05R\x06Status\"5\n" +
+	"\x0fBPUpdateRequest\x12\x0e\n" +
+	"\x02ID\x18\x01 \x01(\x04R\x02ID\x12\x12\n" +
+	"\x04Port\x18\x02 \x01(\x05R\x04Port\",\n" +
+	"\x10BPUpdateResponse\x12\x18\n" +
+	"\aSuccess\x18\x01 \x01(\bR\aSuccess\"\x0e\n" +
+	"\fGetIDRequest\"\x1f\n" +
+	"\rGetIDResponse\x12\x0e\n" +
+	"\x02ID\x18\x01 \x01(\x04R\x02ID\"\x85\x01\n" +
+	"\x0fRTUpdateRequest\x12$\n" +
+	"\rReplacementID\x18\x01 \x01(\x04R\rReplacementID\x12(\n" +
+	"\x0fReplacementPort\x18\x02 \x01(\x05R\x0fReplacementPort\x12\x0e\n" +
+	"\x02ID\x18\x03 \x01(\x04R\x02ID\x12\x12\n" +
+	"\x04Port\x18\x04 \x01(\x05R\x04Port\",\n" +
+	"\x10RTUpdateResponse\x12\x18\n" +
+	"\aSuccess\x18\x01 \x01(\bR\aSuccess\"%\n" +
+	"\x0fBPRemoveRequest\x12\x12\n" +
+	"\x04Port\x18\x01 \x01(\x05R\x04Port\",\n" +
+	"\x10BPRemoveResponse\x12\x18\n" +
+	"\aSuccess\x18\x01 \x01(\bR\aSuccess2\xef\x02\n" +
 	"\vNodeService\x12\x1a\n" +
 	"\x04Ping\x12\b.Nothing\x1a\b.Nothing\x12&\n" +
-	"\x05Route\x12\r.RouteRequest\x1a\x0e.RouteResponseB8Z6https://github.com/StarryBadger/tapestry/src/api/protob\x06proto3"
+	"\x05Route\x12\r.RouteRequest\x1a\x0e.RouteResponse\x12#\n" +
+	"\x06RTCopy\x12\b.Nothing\x1a\x0f.RTCopyResponse\x12<\n" +
+	"\x13InformHoleMulticast\x12\x11.MulticastRequest\x1a\x12.MulticastResponse\x12/\n" +
+	"\bBPUpdate\x12\x10.BPUpdateRequest\x1a\x11.BPUpdateResponse\x12&\n" +
+	"\x05GetID\x12\r.GetIDRequest\x1a\x0e.GetIDResponse\x12/\n" +
+	"\bRTUpdate\x12\x10.RTUpdateRequest\x1a\x11.RTUpdateResponse\x12/\n" +
+	"\bBPRemove\x12\x10.BPRemoveRequest\x1a\x11.BPRemoveResponseB8Z6https://github.com/StarryBadger/tapestry/src/api/protob\x06proto3"
 
 var (
 	file_api_proto_node_proto_rawDescOnce sync.Once
@@ -189,22 +773,45 @@ func file_api_proto_node_proto_rawDescGZIP() []byte {
 	return file_api_proto_node_proto_rawDescData
 }
 
-var file_api_proto_node_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_api_proto_node_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
 var file_api_proto_node_proto_goTypes = []any{
-	(*Nothing)(nil),       // 0: Nothing
-	(*RouteRequest)(nil),  // 1: RouteRequest
-	(*RouteResponse)(nil), // 2: RouteResponse
+	(*Nothing)(nil),           // 0: Nothing
+	(*RouteRequest)(nil),      // 1: RouteRequest
+	(*RouteResponse)(nil),     // 2: RouteResponse
+	(*RTCopyResponse)(nil),    // 3: RTCopyResponse
+	(*MulticastRequest)(nil),  // 4: MulticastRequest
+	(*MulticastResponse)(nil), // 5: MulticastResponse
+	(*BPUpdateRequest)(nil),   // 6: BPUpdateRequest
+	(*BPUpdateResponse)(nil),  // 7: BPUpdateResponse
+	(*GetIDRequest)(nil),      // 8: GetIDRequest
+	(*GetIDResponse)(nil),     // 9: GetIDResponse
+	(*RTUpdateRequest)(nil),   // 10: RTUpdateRequest
+	(*RTUpdateResponse)(nil),  // 11: RTUpdateResponse
+	(*BPRemoveRequest)(nil),   // 12: BPRemoveRequest
+	(*BPRemoveResponse)(nil),  // 13: BPRemoveResponse
 }
 var file_api_proto_node_proto_depIdxs = []int32{
-	0, // 0: NodeService.Ping:input_type -> Nothing
-	1, // 1: NodeService.Route:input_type -> RouteRequest
-	0, // 2: NodeService.Ping:output_type -> Nothing
-	2, // 3: NodeService.Route:output_type -> RouteResponse
-	2, // [2:4] is the sub-list for method output_type
-	0, // [0:2] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	0,  // 0: NodeService.Ping:input_type -> Nothing
+	1,  // 1: NodeService.Route:input_type -> RouteRequest
+	0,  // 2: NodeService.RTCopy:input_type -> Nothing
+	4,  // 3: NodeService.InformHoleMulticast:input_type -> MulticastRequest
+	6,  // 4: NodeService.BPUpdate:input_type -> BPUpdateRequest
+	8,  // 5: NodeService.GetID:input_type -> GetIDRequest
+	10, // 6: NodeService.RTUpdate:input_type -> RTUpdateRequest
+	12, // 7: NodeService.BPRemove:input_type -> BPRemoveRequest
+	0,  // 8: NodeService.Ping:output_type -> Nothing
+	2,  // 9: NodeService.Route:output_type -> RouteResponse
+	3,  // 10: NodeService.RTCopy:output_type -> RTCopyResponse
+	5,  // 11: NodeService.InformHoleMulticast:output_type -> MulticastResponse
+	7,  // 12: NodeService.BPUpdate:output_type -> BPUpdateResponse
+	9,  // 13: NodeService.GetID:output_type -> GetIDResponse
+	11, // 14: NodeService.RTUpdate:output_type -> RTUpdateResponse
+	13, // 15: NodeService.BPRemove:output_type -> BPRemoveResponse
+	8,  // [8:16] is the sub-list for method output_type
+	0,  // [0:8] is the sub-list for method input_type
+	0,  // [0:0] is the sub-list for extension type_name
+	0,  // [0:0] is the sub-list for extension extendee
+	0,  // [0:0] is the sub-list for field type_name
 }
 
 func init() { file_api_proto_node_proto_init() }
@@ -218,7 +825,7 @@ func file_api_proto_node_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_proto_node_proto_rawDesc), len(file_api_proto_node_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   14,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
