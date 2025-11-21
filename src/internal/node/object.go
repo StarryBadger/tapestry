@@ -10,9 +10,9 @@ import (
 
 func (n *Node) AddObject(obj Object) error {
 	objectID := StringToUint64(obj.Name)
-	n.objectsLock.Lock()
+	n.ObjectsLock.Lock()
 	n.Objects[objectID] = obj
-	n.objectsLock.Unlock()
+	n.ObjectsLock.Unlock()
 	log.Printf("[ADD] Object '%s' stored locally.", obj.Name)
 
 	seen := make(map[int]struct{})
@@ -72,9 +72,9 @@ func (n *Node) UnPublish(name string) error {
 	objectID := StringToUint64(name)
 
 	// First, remove it locally.
-	n.objectsLock.Lock()
+	n.ObjectsLock.Lock()
 	delete(n.Objects, objectID)
-	n.objectsLock.Unlock()
+	n.ObjectsLock.Unlock()
 
 	rootPort, err := n.FindRoot(objectID)
 	if err != nil {

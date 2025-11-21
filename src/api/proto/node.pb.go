@@ -709,6 +709,454 @@ func (x *BPRemoveResponse) GetSuccess() bool {
 	return false
 }
 
+type Object struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=Name,proto3" json:"Name,omitempty"`
+	Content       string                 `protobuf:"bytes,2,opt,name=Content,proto3" json:"Content,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Object) Reset() {
+	*x = Object{}
+	mi := &file_api_proto_node_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Object) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Object) ProtoMessage() {}
+
+func (x *Object) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_node_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Object.ProtoReflect.Descriptor instead.
+func (*Object) Descriptor() ([]byte, []int) {
+	return file_api_proto_node_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *Object) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *Object) GetContent() string {
+	if x != nil {
+		return x.Content
+	}
+	return ""
+}
+
+type Ack struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=Success,proto3" json:"Success,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Ack) Reset() {
+	*x = Ack{}
+	mi := &file_api_proto_node_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Ack) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Ack) ProtoMessage() {}
+
+func (x *Ack) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_node_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Ack.ProtoReflect.Descriptor instead.
+func (*Ack) Descriptor() ([]byte, []int) {
+	return file_api_proto_node_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *Ack) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+type RegisterRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Port          int32                  `protobuf:"varint,1,opt,name=Port,proto3" json:"Port,omitempty"`
+	ObjectID      uint64                 `protobuf:"varint,2,opt,name=ObjectID,proto3" json:"ObjectID,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RegisterRequest) Reset() {
+	*x = RegisterRequest{}
+	mi := &file_api_proto_node_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RegisterRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RegisterRequest) ProtoMessage() {}
+
+func (x *RegisterRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_node_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RegisterRequest.ProtoReflect.Descriptor instead.
+func (*RegisterRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_node_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *RegisterRequest) GetPort() int32 {
+	if x != nil {
+		return x.Port
+	}
+	return 0
+}
+
+func (x *RegisterRequest) GetObjectID() uint64 {
+	if x != nil {
+		return x.ObjectID
+	}
+	return 0
+}
+
+type RegisterResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RegisterResponse) Reset() {
+	*x = RegisterResponse{}
+	mi := &file_api_proto_node_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RegisterResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RegisterResponse) ProtoMessage() {}
+
+func (x *RegisterResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_node_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RegisterResponse.ProtoReflect.Descriptor instead.
+func (*RegisterResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_node_proto_rawDescGZIP(), []int{17}
+}
+
+type LookupRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ObjectID      uint64                 `protobuf:"varint,1,opt,name=ObjectID,proto3" json:"ObjectID,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LookupRequest) Reset() {
+	*x = LookupRequest{}
+	mi := &file_api_proto_node_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LookupRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LookupRequest) ProtoMessage() {}
+
+func (x *LookupRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_node_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LookupRequest.ProtoReflect.Descriptor instead.
+func (*LookupRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_node_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *LookupRequest) GetObjectID() uint64 {
+	if x != nil {
+		return x.ObjectID
+	}
+	return 0
+}
+
+type LookupResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Port          int32                  `protobuf:"varint,1,opt,name=Port,proto3" json:"Port,omitempty"` // -1 if not found
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LookupResponse) Reset() {
+	*x = LookupResponse{}
+	mi := &file_api_proto_node_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LookupResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LookupResponse) ProtoMessage() {}
+
+func (x *LookupResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_node_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LookupResponse.ProtoReflect.Descriptor instead.
+func (*LookupResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_node_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *LookupResponse) GetPort() int32 {
+	if x != nil {
+		return x.Port
+	}
+	return 0
+}
+
+type ObjectRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ObjectID      uint64                 `protobuf:"varint,1,opt,name=ObjectID,proto3" json:"ObjectID,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ObjectRequest) Reset() {
+	*x = ObjectRequest{}
+	mi := &file_api_proto_node_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ObjectRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ObjectRequest) ProtoMessage() {}
+
+func (x *ObjectRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_node_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ObjectRequest.ProtoReflect.Descriptor instead.
+func (*ObjectRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_node_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *ObjectRequest) GetObjectID() uint64 {
+	if x != nil {
+		return x.ObjectID
+	}
+	return 0
+}
+
+type ObjectResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=Name,proto3" json:"Name,omitempty"`
+	Content       string                 `protobuf:"bytes,2,opt,name=Content,proto3" json:"Content,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ObjectResponse) Reset() {
+	*x = ObjectResponse{}
+	mi := &file_api_proto_node_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ObjectResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ObjectResponse) ProtoMessage() {}
+
+func (x *ObjectResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_node_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ObjectResponse.ProtoReflect.Descriptor instead.
+func (*ObjectResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_node_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *ObjectResponse) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *ObjectResponse) GetContent() string {
+	if x != nil {
+		return x.Content
+	}
+	return ""
+}
+
+type RemoveObjectRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ObjectID      uint64                 `protobuf:"varint,1,opt,name=ObjectID,proto3" json:"ObjectID,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RemoveObjectRequest) Reset() {
+	*x = RemoveObjectRequest{}
+	mi := &file_api_proto_node_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RemoveObjectRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RemoveObjectRequest) ProtoMessage() {}
+
+func (x *RemoveObjectRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_node_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RemoveObjectRequest.ProtoReflect.Descriptor instead.
+func (*RemoveObjectRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_node_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *RemoveObjectRequest) GetObjectID() uint64 {
+	if x != nil {
+		return x.ObjectID
+	}
+	return 0
+}
+
+type RemoveObjectResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RemoveObjectResponse) Reset() {
+	*x = RemoveObjectResponse{}
+	mi := &file_api_proto_node_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RemoveObjectResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RemoveObjectResponse) ProtoMessage() {}
+
+func (x *RemoveObjectResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_node_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RemoveObjectResponse.ProtoReflect.Descriptor instead.
+func (*RemoveObjectResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_node_proto_rawDescGZIP(), []int{23}
+}
+
 var File_api_proto_node_proto protoreflect.FileDescriptor
 
 const file_api_proto_node_proto_rawDesc = "" +
@@ -750,7 +1198,28 @@ const file_api_proto_node_proto_rawDesc = "" +
 	"\x0fBPRemoveRequest\x12\x12\n" +
 	"\x04Port\x18\x01 \x01(\x05R\x04Port\",\n" +
 	"\x10BPRemoveResponse\x12\x18\n" +
-	"\aSuccess\x18\x01 \x01(\bR\aSuccess2\xef\x02\n" +
+	"\aSuccess\x18\x01 \x01(\bR\aSuccess\"6\n" +
+	"\x06Object\x12\x12\n" +
+	"\x04Name\x18\x01 \x01(\tR\x04Name\x12\x18\n" +
+	"\aContent\x18\x02 \x01(\tR\aContent\"\x1f\n" +
+	"\x03Ack\x12\x18\n" +
+	"\aSuccess\x18\x01 \x01(\bR\aSuccess\"A\n" +
+	"\x0fRegisterRequest\x12\x12\n" +
+	"\x04Port\x18\x01 \x01(\x05R\x04Port\x12\x1a\n" +
+	"\bObjectID\x18\x02 \x01(\x04R\bObjectID\"\x12\n" +
+	"\x10RegisterResponse\"+\n" +
+	"\rLookupRequest\x12\x1a\n" +
+	"\bObjectID\x18\x01 \x01(\x04R\bObjectID\"$\n" +
+	"\x0eLookupResponse\x12\x12\n" +
+	"\x04Port\x18\x01 \x01(\x05R\x04Port\"+\n" +
+	"\rObjectRequest\x12\x1a\n" +
+	"\bObjectID\x18\x01 \x01(\x04R\bObjectID\">\n" +
+	"\x0eObjectResponse\x12\x12\n" +
+	"\x04Name\x18\x01 \x01(\tR\x04Name\x12\x18\n" +
+	"\aContent\x18\x02 \x01(\tR\aContent\"1\n" +
+	"\x13RemoveObjectRequest\x12\x1a\n" +
+	"\bObjectID\x18\x01 \x01(\x04R\bObjectID\"\x16\n" +
+	"\x14RemoveObjectResponse2\x87\x05\n" +
 	"\vNodeService\x12\x1a\n" +
 	"\x04Ping\x12\b.Nothing\x1a\b.Nothing\x12&\n" +
 	"\x05Route\x12\r.RouteRequest\x1a\x0e.RouteResponse\x12#\n" +
@@ -759,7 +1228,14 @@ const file_api_proto_node_proto_rawDesc = "" +
 	"\bBPUpdate\x12\x10.BPUpdateRequest\x1a\x11.BPUpdateResponse\x12&\n" +
 	"\x05GetID\x12\r.GetIDRequest\x1a\x0e.GetIDResponse\x12/\n" +
 	"\bRTUpdate\x12\x10.RTUpdateRequest\x1a\x11.RTUpdateResponse\x12/\n" +
-	"\bBPRemove\x12\x10.BPRemoveRequest\x1a\x11.BPRemoveResponseB8Z6https://github.com/StarryBadger/tapestry/src/api/protob\x06proto3"
+	"\bBPRemove\x12\x10.BPRemoveRequest\x1a\x11.BPRemoveResponse\x12/\n" +
+	"\bRegister\x12\x10.RegisterRequest\x1a\x11.RegisterResponse\x121\n" +
+	"\n" +
+	"UnRegister\x12\x10.RegisterRequest\x1a\x11.RegisterResponse\x12)\n" +
+	"\x06Lookup\x12\x0e.LookupRequest\x1a\x0f.LookupResponse\x12,\n" +
+	"\tGetObject\x12\x0e.ObjectRequest\x1a\x0f.ObjectResponse\x12\x1c\n" +
+	"\vStoreObject\x12\a.Object\x1a\x04.Ack\x12;\n" +
+	"\fRemoveObject\x12\x14.RemoveObjectRequest\x1a\x15.RemoveObjectResponseB\x14Z\x12tapestry/api/protob\x06proto3"
 
 var (
 	file_api_proto_node_proto_rawDescOnce sync.Once
@@ -773,22 +1249,32 @@ func file_api_proto_node_proto_rawDescGZIP() []byte {
 	return file_api_proto_node_proto_rawDescData
 }
 
-var file_api_proto_node_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
+var file_api_proto_node_proto_msgTypes = make([]protoimpl.MessageInfo, 24)
 var file_api_proto_node_proto_goTypes = []any{
-	(*Nothing)(nil),           // 0: Nothing
-	(*RouteRequest)(nil),      // 1: RouteRequest
-	(*RouteResponse)(nil),     // 2: RouteResponse
-	(*RTCopyResponse)(nil),    // 3: RTCopyResponse
-	(*MulticastRequest)(nil),  // 4: MulticastRequest
-	(*MulticastResponse)(nil), // 5: MulticastResponse
-	(*BPUpdateRequest)(nil),   // 6: BPUpdateRequest
-	(*BPUpdateResponse)(nil),  // 7: BPUpdateResponse
-	(*GetIDRequest)(nil),      // 8: GetIDRequest
-	(*GetIDResponse)(nil),     // 9: GetIDResponse
-	(*RTUpdateRequest)(nil),   // 10: RTUpdateRequest
-	(*RTUpdateResponse)(nil),  // 11: RTUpdateResponse
-	(*BPRemoveRequest)(nil),   // 12: BPRemoveRequest
-	(*BPRemoveResponse)(nil),  // 13: BPRemoveResponse
+	(*Nothing)(nil),              // 0: Nothing
+	(*RouteRequest)(nil),         // 1: RouteRequest
+	(*RouteResponse)(nil),        // 2: RouteResponse
+	(*RTCopyResponse)(nil),       // 3: RTCopyResponse
+	(*MulticastRequest)(nil),     // 4: MulticastRequest
+	(*MulticastResponse)(nil),    // 5: MulticastResponse
+	(*BPUpdateRequest)(nil),      // 6: BPUpdateRequest
+	(*BPUpdateResponse)(nil),     // 7: BPUpdateResponse
+	(*GetIDRequest)(nil),         // 8: GetIDRequest
+	(*GetIDResponse)(nil),        // 9: GetIDResponse
+	(*RTUpdateRequest)(nil),      // 10: RTUpdateRequest
+	(*RTUpdateResponse)(nil),     // 11: RTUpdateResponse
+	(*BPRemoveRequest)(nil),      // 12: BPRemoveRequest
+	(*BPRemoveResponse)(nil),     // 13: BPRemoveResponse
+	(*Object)(nil),               // 14: Object
+	(*Ack)(nil),                  // 15: Ack
+	(*RegisterRequest)(nil),      // 16: RegisterRequest
+	(*RegisterResponse)(nil),     // 17: RegisterResponse
+	(*LookupRequest)(nil),        // 18: LookupRequest
+	(*LookupResponse)(nil),       // 19: LookupResponse
+	(*ObjectRequest)(nil),        // 20: ObjectRequest
+	(*ObjectResponse)(nil),       // 21: ObjectResponse
+	(*RemoveObjectRequest)(nil),  // 22: RemoveObjectRequest
+	(*RemoveObjectResponse)(nil), // 23: RemoveObjectResponse
 }
 var file_api_proto_node_proto_depIdxs = []int32{
 	0,  // 0: NodeService.Ping:input_type -> Nothing
@@ -799,16 +1285,28 @@ var file_api_proto_node_proto_depIdxs = []int32{
 	8,  // 5: NodeService.GetID:input_type -> GetIDRequest
 	10, // 6: NodeService.RTUpdate:input_type -> RTUpdateRequest
 	12, // 7: NodeService.BPRemove:input_type -> BPRemoveRequest
-	0,  // 8: NodeService.Ping:output_type -> Nothing
-	2,  // 9: NodeService.Route:output_type -> RouteResponse
-	3,  // 10: NodeService.RTCopy:output_type -> RTCopyResponse
-	5,  // 11: NodeService.InformHoleMulticast:output_type -> MulticastResponse
-	7,  // 12: NodeService.BPUpdate:output_type -> BPUpdateResponse
-	9,  // 13: NodeService.GetID:output_type -> GetIDResponse
-	11, // 14: NodeService.RTUpdate:output_type -> RTUpdateResponse
-	13, // 15: NodeService.BPRemove:output_type -> BPRemoveResponse
-	8,  // [8:16] is the sub-list for method output_type
-	0,  // [0:8] is the sub-list for method input_type
+	16, // 8: NodeService.Register:input_type -> RegisterRequest
+	16, // 9: NodeService.UnRegister:input_type -> RegisterRequest
+	18, // 10: NodeService.Lookup:input_type -> LookupRequest
+	20, // 11: NodeService.GetObject:input_type -> ObjectRequest
+	14, // 12: NodeService.StoreObject:input_type -> Object
+	22, // 13: NodeService.RemoveObject:input_type -> RemoveObjectRequest
+	0,  // 14: NodeService.Ping:output_type -> Nothing
+	2,  // 15: NodeService.Route:output_type -> RouteResponse
+	3,  // 16: NodeService.RTCopy:output_type -> RTCopyResponse
+	5,  // 17: NodeService.InformHoleMulticast:output_type -> MulticastResponse
+	7,  // 18: NodeService.BPUpdate:output_type -> BPUpdateResponse
+	9,  // 19: NodeService.GetID:output_type -> GetIDResponse
+	11, // 20: NodeService.RTUpdate:output_type -> RTUpdateResponse
+	13, // 21: NodeService.BPRemove:output_type -> BPRemoveResponse
+	17, // 22: NodeService.Register:output_type -> RegisterResponse
+	17, // 23: NodeService.UnRegister:output_type -> RegisterResponse
+	19, // 24: NodeService.Lookup:output_type -> LookupResponse
+	21, // 25: NodeService.GetObject:output_type -> ObjectResponse
+	15, // 26: NodeService.StoreObject:output_type -> Ack
+	23, // 27: NodeService.RemoveObject:output_type -> RemoveObjectResponse
+	14, // [14:28] is the sub-list for method output_type
+	0,  // [0:14] is the sub-list for method input_type
 	0,  // [0:0] is the sub-list for extension type_name
 	0,  // [0:0] is the sub-list for extension extendee
 	0,  // [0:0] is the sub-list for field type_name
@@ -825,7 +1323,7 @@ func file_api_proto_node_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_proto_node_proto_rawDesc), len(file_api_proto_node_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   14,
+			NumMessages:   24,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

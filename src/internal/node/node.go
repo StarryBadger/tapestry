@@ -31,7 +31,7 @@ type Node struct {
 
 	rtLock         sync.RWMutex
 	bpLock         sync.RWMutex
-	objectsLock    sync.RWMutex 
+	ObjectsLock    sync.RWMutex 
 	publishersLock sync.RWMutex 
 }
 

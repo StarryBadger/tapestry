@@ -27,6 +27,12 @@ const (
 	NodeService_GetID_FullMethodName               = "/NodeService/GetID"
 	NodeService_RTUpdate_FullMethodName            = "/NodeService/RTUpdate"
 	NodeService_BPRemove_FullMethodName            = "/NodeService/BPRemove"
+	NodeService_Register_FullMethodName            = "/NodeService/Register"
+	NodeService_UnRegister_FullMethodName          = "/NodeService/UnRegister"
+	NodeService_Lookup_FullMethodName              = "/NodeService/Lookup"
+	NodeService_GetObject_FullMethodName           = "/NodeService/GetObject"
+	NodeService_StoreObject_FullMethodName         = "/NodeService/StoreObject"
+	NodeService_RemoveObject_FullMethodName        = "/NodeService/RemoveObject"
 )
 
 // NodeServiceClient is the client API for NodeService service.
@@ -41,6 +47,12 @@ type NodeServiceClient interface {
 	GetID(ctx context.Context, in *GetIDRequest, opts ...grpc.CallOption) (*GetIDResponse, error)
 	RTUpdate(ctx context.Context, in *RTUpdateRequest, opts ...grpc.CallOption) (*RTUpdateResponse, error)
 	BPRemove(ctx context.Context, in *BPRemoveRequest, opts ...grpc.CallOption) (*BPRemoveResponse, error)
+	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
+	UnRegister(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
+	Lookup(ctx context.Context, in *LookupRequest, opts ...grpc.CallOption) (*LookupResponse, error)
+	GetObject(ctx context.Context, in *ObjectRequest, opts ...grpc.CallOption) (*ObjectResponse, error)
+	StoreObject(ctx context.Context, in *Object, opts ...grpc.CallOption) (*Ack, error)
+	RemoveObject(ctx context.Context, in *RemoveObjectRequest, opts ...grpc.CallOption) (*RemoveObjectResponse, error)
 }
 
 type nodeServiceClient struct {
@@ -131,6 +143,66 @@ func (c *nodeServiceClient) BPRemove(ctx context.Context, in *BPRemoveRequest, o
 	return out, nil
 }
 
+func (c *nodeServiceClient) Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RegisterResponse)
+	err := c.cc.Invoke(ctx, NodeService_Register_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *nodeServiceClient) UnRegister(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RegisterResponse)
+	err := c.cc.Invoke(ctx, NodeService_UnRegister_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *nodeServiceClient) Lookup(ctx context.Context, in *LookupRequest, opts ...grpc.CallOption) (*LookupResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(LookupResponse)
+	err := c.cc.Invoke(ctx, NodeService_Lookup_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *nodeServiceClient) GetObject(ctx context.Context, in *ObjectRequest, opts ...grpc.CallOption) (*ObjectResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ObjectResponse)
+	err := c.cc.Invoke(ctx, NodeService_GetObject_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *nodeServiceClient) StoreObject(ctx context.Context, in *Object, opts ...grpc.CallOption) (*Ack, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Ack)
+	err := c.cc.Invoke(ctx, NodeService_StoreObject_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *nodeServiceClient) RemoveObject(ctx context.Context, in *RemoveObjectRequest, opts ...grpc.CallOption) (*RemoveObjectResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RemoveObjectResponse)
+	err := c.cc.Invoke(ctx, NodeService_RemoveObject_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // NodeServiceServer is the server API for NodeService service.
 // All implementations must embed UnimplementedNodeServiceServer
 // for forward compatibility.
@@ -143,6 +215,12 @@ type NodeServiceServer interface {
 	GetID(context.Context, *GetIDRequest) (*GetIDResponse, error)
 	RTUpdate(context.Context, *RTUpdateRequest) (*RTUpdateResponse, error)
 	BPRemove(context.Context, *BPRemoveRequest) (*BPRemoveResponse, error)
+	Register(context.Context, *RegisterRequest) (*RegisterResponse, error)
+	UnRegister(context.Context, *RegisterRequest) (*RegisterResponse, error)
+	Lookup(context.Context, *LookupRequest) (*LookupResponse, error)
+	GetObject(context.Context, *ObjectRequest) (*ObjectResponse, error)
+	StoreObject(context.Context, *Object) (*Ack, error)
+	RemoveObject(context.Context, *RemoveObjectRequest) (*RemoveObjectResponse, error)
 	mustEmbedUnimplementedNodeServiceServer()
 }
 
@@ -176,6 +254,24 @@ func (UnimplementedNodeServiceServer) RTUpdate(context.Context, *RTUpdateRequest
 }
 func (UnimplementedNodeServiceServer) BPRemove(context.Context, *BPRemoveRequest) (*BPRemoveResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BPRemove not implemented")
+}
+func (UnimplementedNodeServiceServer) Register(context.Context, *RegisterRequest) (*RegisterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Register not implemented")
+}
+func (UnimplementedNodeServiceServer) UnRegister(context.Context, *RegisterRequest) (*RegisterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UnRegister not implemented")
+}
+func (UnimplementedNodeServiceServer) Lookup(context.Context, *LookupRequest) (*LookupResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Lookup not implemented")
+}
+func (UnimplementedNodeServiceServer) GetObject(context.Context, *ObjectRequest) (*ObjectResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetObject not implemented")
+}
+func (UnimplementedNodeServiceServer) StoreObject(context.Context, *Object) (*Ack, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method StoreObject not implemented")
+}
+func (UnimplementedNodeServiceServer) RemoveObject(context.Context, *RemoveObjectRequest) (*RemoveObjectResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveObject not implemented")
 }
 func (UnimplementedNodeServiceServer) mustEmbedUnimplementedNodeServiceServer() {}
 func (UnimplementedNodeServiceServer) testEmbeddedByValue()                     {}
@@ -342,6 +438,114 @@ func _NodeService_BPRemove_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _NodeService_Register_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RegisterRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NodeServiceServer).Register(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NodeService_Register_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NodeServiceServer).Register(ctx, req.(*RegisterRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NodeService_UnRegister_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RegisterRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NodeServiceServer).UnRegister(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NodeService_UnRegister_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NodeServiceServer).UnRegister(ctx, req.(*RegisterRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NodeService_Lookup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LookupRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NodeServiceServer).Lookup(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NodeService_Lookup_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NodeServiceServer).Lookup(ctx, req.(*LookupRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NodeService_GetObject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ObjectRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NodeServiceServer).GetObject(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NodeService_GetObject_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NodeServiceServer).GetObject(ctx, req.(*ObjectRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NodeService_StoreObject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Object)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NodeServiceServer).StoreObject(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NodeService_StoreObject_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NodeServiceServer).StoreObject(ctx, req.(*Object))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NodeService_RemoveObject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RemoveObjectRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NodeServiceServer).RemoveObject(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NodeService_RemoveObject_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NodeServiceServer).RemoveObject(ctx, req.(*RemoveObjectRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // NodeService_ServiceDesc is the grpc.ServiceDesc for NodeService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -380,6 +584,30 @@ var NodeService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "BPRemove",
 			Handler:    _NodeService_BPRemove_Handler,
+		},
+		{
+			MethodName: "Register",
+			Handler:    _NodeService_Register_Handler,
+		},
+		{
+			MethodName: "UnRegister",
+			Handler:    _NodeService_UnRegister_Handler,
+		},
+		{
+			MethodName: "Lookup",
+			Handler:    _NodeService_Lookup_Handler,
+		},
+		{
+			MethodName: "GetObject",
+			Handler:    _NodeService_GetObject_Handler,
+		},
+		{
+			MethodName: "StoreObject",
+			Handler:    _NodeService_StoreObject_Handler,
+		},
+		{
+			MethodName: "RemoveObject",
+			Handler:    _NodeService_RemoveObject_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

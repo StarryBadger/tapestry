@@ -80,9 +80,9 @@ func (n *Node) Lookup(ctx context.Context, req *pb.LookupRequest) (*pb.LookupRes
 func (n *Node) GetObject(ctx context.Context, req *pb.ObjectRequest) (*pb.ObjectResponse, error) {
 	objectID := req.ObjectID
 
-	n.objectsLock.RLock()
+	n.ObjectsLock.RLock()
 	obj, ok := n.Objects[objectID]
-	n.objectsLock.RUnlock()
+	n.ObjectsLock.RUnlock()
 
 	if !ok {
 		return nil, fmt.Errorf("object %v not found locally on node %v", objectID, n.ID)
@@ -100,9 +100,9 @@ func (n *Node) StoreObject(ctx context.Context, obj *pb.Object) (*pb.Ack, error)
 	}
 	objectID := StringToUint64(object.Name)
 
-	n.objectsLock.Lock()
+	n.ObjectsLock.Lock()
 	n.Objects[objectID] = object
-	n.objectsLock.Unlock()
+	n.ObjectsLock.Unlock()
 
 	log.Printf("[STORE] Node %v stored a replica of object '%s'", n.ID, object.Name)
 	return &pb.Ack{Success: true}, nil
@@ -111,9 +111,9 @@ func (n *Node) StoreObject(ctx context.Context, obj *pb.Object) (*pb.Ack, error)
 func (n *Node) RemoveObject(ctx context.Context, req *pb.RemoveObjectRequest) (*pb.RemoveObjectResponse, error) {
 	objectID := req.ObjectID
 
-	n.objectsLock.Lock()
+	n.ObjectsLock.Lock()
 	delete(n.Objects, objectID)
-	n.objectsLock.Unlock()
+	n.ObjectsLock.Unlock()
 
 	log.Printf("[REMOVE] Node %v removed object %v from local store", n.ID, objectID)
 	return &pb.RemoveObjectResponse{}, nil
