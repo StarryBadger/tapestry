@@ -2,133 +2,132 @@ package node
 
 import (
 	"context"
+	"fmt"
 	"log"
-
 	pb "tapestry/api/proto"
-	"tapestry/internal/util"
+	"tapestry/internal/id"
 )
 
-func (n *Node) Insert(bootstrapPort int) error {
-	n.rtLock.Lock()
-	for level := 0; level < util.DIGITS; level++ {
-		digit := util.GetDigit(n.ID, level)
-		n.RoutingTable[level][digit] = n.Port
-	}
-	n.rtLock.Unlock()
+// Join connects the node to the Tapestry network via a bootstrap node.
+func (n *Node) Join(bootstrapAddr string) error {
+	log.Printf("Node %s joining via %s...", n.ID, bootstrapAddr)
 
-	if bootstrapPort == 0 {
-		return nil
-	}
-
-	client, conn, err := GetNodeClient(bootstrapPort)
+	// 1. Connect to Bootstrap Node
+	bsClient, err := GetClient(bootstrapAddr)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to contact bootstrap: %v", err)
 	}
-	defer conn.Close()
+	defer bsClient.Close()
 
-	resp, err := client.Route(context.Background(), &pb.RouteRequest{ID: n.ID, Level: 0})
+	// 2. Find Surrogate Root for My ID
+	req := &pb.RouteRequest{
+		TargetId: &pb.NodeID{Bytes: n.ID.Bytes()},
+		SourceId: &pb.NodeID{Bytes: n.ID.Bytes()},
+	}
+	
+	resp, err := bsClient.GetNextHop(context.Background(), req)
 	if err != nil {
-		return err
+		return fmt.Errorf("bootstrap route failed: %v", err)
 	}
 
-	rootPort := int(resp.Port)
-	rootID := resp.ID
-
-	rootClient, rootConn, err := GetNodeClient(rootPort)
-	if err != nil {
-		return err
-	}
-	defer rootConn.Close()
-
-	rtCopyResp, err := rootClient.RTCopy(context.Background(), &pb.Nothing{})
-	if err != nil {
-		return err
-	}
-	rtCopy := util.UnflattenMatrix(rtCopyResp.Data, int(rtCopyResp.Rows), int(rtCopyResp.Cols))
-
-	commonLen := util.CommonPrefixLen(rootID, n.ID)
-	for level := 0; level < commonLen; level++ {
-		n.rtLock.Lock()
-		n.RoutingTable[level] = rtCopy[level]
-		n.rtLock.Unlock()
+	var surrogateNeighbor Neighbor
+	if resp.NextHop != nil {
+		surrogateNeighbor, _ = NeighborFromProto(resp.NextHop)
 	}
 
-	_, err = rootClient.InformHoleMulticast(context.Background(), &pb.MulticastRequest{
-		NewPort:       int32(n.Port),
-		NewID:         n.ID,
-		OriginalLevel: int32(commonLen),
-		Level:         int32(commonLen),
-	})
-	if err != nil {
-		log.Printf("Error during multicast initiation: %v", err)
+	// Use bootstrap as fallback if surrogate is missing (shouldn't happen)
+	if surrogateNeighbor.Address == "" {
+		log.Println("Surrogate lookup returned empty, using bootstrap as surrogate.")
+		// We don't have the ID easily here unless we ask, but let's assume the bootstrap logic holds.
+		// In a real fix, we'd ping bootstrap for ID. For now, rely on surrogate.
+		return fmt.Errorf("surrogate lookup failed")
 	}
 
-	for level := 0; level < commonLen; level++ {
-		for _, port := range rtCopy[level] {
-			if port != -1 && port != n.Port {
-				go func(p int) {
-					client, conn, err := GetNodeClient(p)
-					if err == nil {
-						defer conn.Close()
-						client.BPUpdate(context.Background(), &pb.BPUpdateRequest{ID: n.ID, Port: int32(n.Port)})
-					}
-				}(port)
-			}
+	log.Printf("Found Surrogate Root: %s (%s)", surrogateNeighbor.ID, surrogateNeighbor.Address)
+
+	// CRITICAL FIX: Add the surrogate to our routing table immediately!
+	// This ensures we have at least one link into the network.
+	added := n.Table.Add(surrogateNeighbor)
+	if added {
+		log.Printf("Added Surrogate %s to routing table.", surrogateNeighbor.ID)
+	}
+
+	// 3. Copy Routing Table from Surrogate
+	copyClient, err := GetClient(surrogateNeighbor.Address)
+	if err == nil {
+		defer copyClient.Close()
+		rtResp, err := copyClient.GetRoutingTable(context.Background(), &pb.Nothing{})
+		if err == nil {
+			n.populateTable(rtResp)
+		} else {
+			log.Printf("Failed to copy table from surrogate: %v", err)
 		}
 	}
+
+	// 4. Notify Neighbors (Backpointer / Optimization)
+	// Since we added the surrogate to our table in Step 2, this will now notify the surrogate.
+	// The surrogate will then add US to THEIR table.
+	n.notifyNeighbors()
 
 	return nil
 }
 
-func (n *Node) RTCopy(ctx context.Context, req *pb.Nothing) (*pb.RTCopyResponse, error) {
-	n.rtLock.RLock()
-	defer n.rtLock.RUnlock()
+func (n *Node) populateTable(resp *pb.RTCopyResponse) {
+	n.Table.lock.Lock()
+	defer n.Table.lock.Unlock()
 
-	return &pb.RTCopyResponse{
-		Data: util.FlattenMatrix(n.RoutingTable),
-		Rows: int32(util.DIGITS),
-		Cols: int32(util.RADIX),
-	}, nil
-}
-
-func (n *Node) InformHoleMulticast(ctx context.Context, req *pb.MulticastRequest) (*pb.MulticastResponse, error) {
-	level := int(req.Level)
-	originalLevel := int(req.OriginalLevel)
-	newPort := int(req.NewPort)
-	newID := req.NewID
-
-	if level < util.DIGITS {
-		n.rtLock.RLock()
-		row := n.RoutingTable[level]
-		n.rtLock.RUnlock()
-		for _, port := range row {
-			if port != -1 && port != n.Port && port != newPort {
-				go func(p int) {
-					client, conn, err := GetNodeClient(p)
-					if err == nil {
-						defer conn.Close()
-						client.InformHoleMulticast(ctx, &pb.MulticastRequest{
-							NewPort:       req.NewPort,
-							NewID:         req.NewID,
-							OriginalLevel: req.OriginalLevel,
-							Level:         req.Level + 1,
-						})
+	idx := 0
+	count := 0
+	for i := 0; i < id.DIGITS; i++ {
+		for j := 0; j < id.RADIX; j++ {
+			if idx < len(resp.Entries) {
+				entry := resp.Entries[idx]
+				for _, nbProto := range entry.Neighbors {
+					nb, _ := NeighborFromProto(nbProto)
+					// Only add if slot is empty (don't overwrite what we might have found)
+					// and don't add ourselves.
+					if len(n.Table.rows[i][j]) == 0 && !nb.ID.Equals(n.ID) {
+						n.Table.rows[i][j] = append(n.Table.rows[i][j], nb)
+						count++
 					}
-				}(port)
+				}
+				idx++
 			}
 		}
 	}
+	log.Printf("Bootstrap: Copied %d entries from surrogate.", count)
+}
 
-	digit := util.GetDigit(newID, originalLevel)
-	n.rtLock.Lock()
-	n.RoutingTable[originalLevel][digit] = newPort
-	n.rtLock.Unlock()
-
-	client, conn, err := GetNodeClient(newPort)
-	if err == nil {
-		defer conn.Close()
-		client.BPUpdate(context.Background(), &pb.BPUpdateRequest{ID: n.ID, Port: int32(n.Port)})
+func (n *Node) notifyNeighbors() {
+	var neighbors []Neighbor
+	
+	// Snapshot the table to avoid holding lock during network calls
+	n.Table.lock.RLock()
+	for i := 0; i < id.DIGITS; i++ {
+		for j := 0; j < id.RADIX; j++ {
+			neighbors = append(neighbors, n.Table.rows[i][j]...)
+		}
 	}
+	n.Table.lock.RUnlock()
 
-	return &pb.MulticastResponse{Status: 0}, nil
+	log.Printf("Notifying %d neighbors of existence...", len(neighbors))
+
+	for _, nb := range neighbors {
+		go func(target Neighbor) {
+			client, err := GetClient(target.Address)
+			if err == nil {
+				defer client.Close()
+				level := id.SharedPrefixLength(target.ID, n.ID)
+				
+				req := &pb.BackpointerRequest{
+					From:  &pb.Neighbor{Id: &pb.NodeID{Bytes: n.ID.Bytes()}, Address: n.Address},
+					Level: int32(level),
+				}
+				_, err := client.AddBackpointer(context.Background(), req)
+				if err != nil {
+					log.Printf("Failed to notify %s: %v", target.Address, err)
+				}
+			}
+		}(nb)
+	}
 }

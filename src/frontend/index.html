@@ -2,10 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Tapestry Frontend</title>
+    <title>Tapestry Frontend (SHA-1)</title>
     <style>
       body {
-        font-family: sans-serif;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
         display: flex;
         height: 100vh;
         margin: 0;
@@ -18,6 +18,7 @@
         background-color: #fff;
         display: flex;
         flex-direction: column;
+        overflow-y: auto;
       }
       .main-content {
         flex-grow: 1;
@@ -31,6 +32,7 @@
         border: 1px solid #ddd;
         border-radius: 8px;
         background-color: #fafafa;
+        overflow: hidden;
       }
       .log-container {
         height: 200px;
@@ -38,16 +40,16 @@
         overflow-y: scroll;
         padding: 10px;
         margin-top: 20px;
-        background-color: #333;
-        color: #eee;
+        background-color: #222;
+        color: #0f0;
         font-family: monospace;
         font-size: 12px;
         border-radius: 8px;
       }
       .node {
         position: absolute;
-        width: 60px;
-        height: 60px;
+        width: 50px;
+        height: 50px;
         background-color: #007bff;
         color: white;
         border-radius: 50%;
@@ -55,18 +57,21 @@
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        transition: transform 0.2s;
+        transition: all 0.2s;
+        font-size: 10px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        z-index: 10;
       }
       .node:hover {
         transform: scale(1.1);
+        z-index: 20;
+        background-color: #0056b3;
       }
       .details-panel {
         display: none;
+        margin-top: 20px;
       }
-      h2,
-      h3 {
-        color: #333;
-      }
+      h2, h3 { color: #333; }
       button {
         padding: 8px 12px;
         border: none;
@@ -75,10 +80,9 @@
         border-radius: 4px;
         cursor: pointer;
         margin-right: 10px;
+        margin-bottom: 5px;
       }
-      button:hover {
-        opacity: 0.9;
-      }
+      button:hover { opacity: 0.9; }
       input {
         padding: 8px;
         border: 1px solid #ccc;
@@ -89,68 +93,90 @@
       table {
         width: 100%;
         border-collapse: collapse;
-        font-size: 12px;
+        font-size: 11px;
+        margin-top: 10px;
       }
-      th,
-      td {
+      th, td {
         border: 1px solid #ddd;
         padding: 4px;
-        text-align: left;
+        text-align: center;
       }
-      th {
-        background-color: #f2f2f2;
-      }
+      th { background-color: #f2f2f2; }
+      .rt-cell { font-family: monospace; }
     </style>
   </head>
   <body>
     <div class="sidebar">
-      <h2>Controls</h2>
-      <button onclick="addNode()">Add Node</button>
+      <h2>Tapestry Controls</h2>
+      <button onclick="addNode()">Spawn New Node</button>
       <hr />
+      
       <div id="details-panel" class="details-panel">
         <h3 id="details-title">Node Details</h3>
+        <p><strong>ID:</strong> <span id="node-id-full" style="font-family: monospace; word-break: break-all;"></span></p>
+        <p><strong>Port:</strong> <span id="node-port"></span></p>
+        
         <div id="details-content"></div>
+
         <h4>Actions</h4>
-        <input id="key-input" placeholder="Key" />
-        <input id="value-input" placeholder="Value (for publish)" />
-        <button onclick="publish()">Publish</button>
-        <button onclick="find()">Find</button>
-        <button onclick="unpublish()">Unpublish</button>
+        <input id="key-input" placeholder="Object Key (e.g., 'my-file')" />
+        <input id="value-input" placeholder="Content (e.g., 'Hello World')" />
+        <button onclick="publish()">Store & Publish</button>
+        <button onclick="find()">Find & Fetch</button>
       </div>
     </div>
+
     <div class="main-content">
       <div class="ring-container" id="ring-container"></div>
       <div class="log-container" id="log-container"></div>
     </div>
+
     <script>
       let selectedNode = null;
       const logContainer = document.getElementById("log-container");
 
-      // Fetch and display nodes on load
       window.onload = () => {
         fetchNodes();
         connectWebSocket();
+        setInterval(fetchNodes, 5000); // Auto-refresh nodes
       };
 
       async function fetchNodes() {
-        const response = await fetch("/nodes");
-        const nodes = await response.json();
+        try {
+          const response = await fetch("/nodes");
+          const nodes = await response.json();
+          renderRing(nodes);
+        } catch (e) {
+          console.error("Failed to fetch nodes", e);
+        }
+      }
+
+      function renderRing(nodes) {
         const ring = document.getElementById("ring-container");
+        // Don't redraw if we are interacting (simple check)
+        // ideally we diff, but for now just clear
         ring.innerHTML = "";
-        const radius = Math.min(ring.clientWidth, ring.clientHeight) / 2 - 40;
+        
+        const radius = Math.min(ring.clientWidth, ring.clientHeight) / 2 - 50;
         const centerX = ring.clientWidth / 2;
         const centerY = ring.clientHeight / 2;
 
+        // Sort nodes by port to keep visual stability
+        nodes.sort((a, b) => a.port - b.port);
+
         nodes.forEach((node, i) => {
           const angle = (i / nodes.length) * 2 * Math.PI;
-          const x = centerX + radius * Math.cos(angle) - 30;
-          const y = centerY + radius * Math.sin(angle) - 30;
+          const x = centerX + radius * Math.cos(angle) - 25;
+          const y = centerY + radius * Math.sin(angle) - 25;
 
           const nodeEl = document.createElement("div");
           nodeEl.className = "node";
           nodeEl.style.left = `${x}px`;
           nodeEl.style.top = `${y}px`;
+          // Display port as label
           nodeEl.innerText = node.port;
+          nodeEl.title = `Port: ${node.port}`;
+          
           nodeEl.onclick = () => showNodeDetails(node);
           ring.appendChild(nodeEl);
         });
@@ -158,134 +184,122 @@
 
       async function addNode() {
         await fetch("/add-node", { method: "POST" });
-        fetchNodes();
+        setTimeout(fetchNodes, 500);
       }
-
-      // Replace the existing showNodeDetails function with this new version.
 
       async function showNodeDetails(node) {
         selectedNode = node;
-        const response = await fetch(
-          `http://localhost:${node.httpPort}/status`
-        );
-        if (!response.ok) {
-          alert(
-            `Could not fetch status for node ${node.port}. It might have shut down.`
-          );
-          return;
-        }
-        const status = await response.json();
+        try {
+          const response = await fetch(`http://localhost:${node.httpPort}/status`);
+          if (!response.ok) throw new Error("Node unreachable");
+          const status = await response.json();
 
-        document.getElementById(
-          "details-title"
-        ).innerText = `Node ${status.port} Details`;
-        const content = document.getElementById("details-content");
+          document.getElementById("details-title").innerText = `Node ${status.port}`;
+          document.getElementById("node-id-full").innerText = status.id;
+          document.getElementById("node-port").innerText = status.port;
 
-        // --- Build HTML for Stored Objects ---
-        let objectsHtml = "<h4>Stored Objects</h4>";
-        if (status.objects && status.objects.length > 0) {
-          objectsHtml += "<table><tr><th>Key</th><th>Value</th></tr>";
-          status.objects.forEach((o) => {
-            objectsHtml += `<tr><td>${o.Name}</td><td>${o.Content}</td></tr>`;
-          });
-          objectsHtml += "</table>";
-        } else {
-          objectsHtml += "<p>None</p>";
-        }
+          let contentHtml = "";
 
-        // --- Build HTML for Backpointers ---
-        let backpointersHtml = "<h4>Backpointers</h4>";
-        if (status.backpointers && status.backpointers.length > 0) {
-          backpointersHtml += `<p>${status.backpointers.join(", ")}</p>`;
-        } else {
-          backpointersHtml += "<p>None</p>";
-        }
-
-        // --- Build HTML for Routing Table ---
-        let routingTableHtml = "<h4>Routing Table</h4>";
-        if (status.routingTable && status.routingTable.length > 0) {
-          routingTableHtml +=
-            "<table><tr><th>Lvl</th><th>0</th><th>1</th><th>2</th><th>3</th></tr>";
-          // Display first 10 levels for brevity
-          for (let i = 0; i < 10 && i < status.routingTable.length; i++) {
-            const row = status.routingTable[i];
-            routingTableHtml += `<tr><td><strong>${i}</strong></td>`;
-            row.forEach((port) => {
-              // Use a dot for empty slots (-1)
-              routingTableHtml += `<td>${port === -1 ? "." : port}</td>`;
+          // Objects
+          contentHtml += "<h4>Stored Objects</h4>";
+          if (status.objects && status.objects.length > 0) {
+            contentHtml += "<table><tr><th>Key</th><th>Data</th></tr>";
+            status.objects.forEach(o => {
+              contentHtml += `<tr><td>${o.Key}</td><td>${o.Data}</td></tr>`;
             });
-            routingTableHtml += "</tr>";
+            contentHtml += "</table>";
+          } else {
+            contentHtml += "<p><i>Empty</i></p>";
           }
-          routingTableHtml += "</table>";
-        } else {
-          routingTableHtml += "<p>Empty</p>";
+
+          // Backpointers
+          contentHtml += "<h4>Backpointers</h4>";
+          if (status.backpointers && status.backpointers.length > 0) {
+             contentHtml += "<ul>";
+             status.backpointers.forEach(bp => {
+                 contentHtml += `<li style="font-size:10px; font-family:monospace">${bp}</li>`;
+             });
+             contentHtml += "</ul>";
+          } else {
+            contentHtml += "<p><i>None</i></p>";
+          }
+
+          // Routing Table (First 8 Levels)
+          contentHtml += "<h4>Routing Table (Top 8 Levels)</h4>";
+          if (status.routingTable && status.routingTable.length > 0) {
+            contentHtml += "<table><tr><th>Lvl</th>";
+            for(let k=0; k<16; k++) contentHtml += `<th>${k.toString(16).toUpperCase()}</th>`;
+            contentHtml += "</tr>";
+
+            for (let i = 0; i < 8 && i < status.routingTable.length; i++) {
+              contentHtml += `<tr><td><strong>${i}</strong></td>`;
+              status.routingTable[i].forEach(cell => {
+                const val = cell === "." ? "." : "█"; // Use block for occupied, or cell for full ID
+                const title = cell === "." ? "" : cell;
+                contentHtml += `<td class="rt-cell" title="${title}">${val}</td>`;
+              });
+              contentHtml += "</tr>";
+            }
+            contentHtml += "</table>";
+          }
+
+          document.getElementById("details-content").innerHTML = contentHtml;
+          document.getElementById("details-panel").style.display = "block";
+        } catch (e) {
+          alert("Could not fetch node details. Is it running?");
         }
-
-        // --- Assemble the final HTML ---
-        content.innerHTML = `
-        <p><strong>ID:</strong> ${status.id.substring(0, 10)}...</p>
-        ${objectsHtml}
-        ${backpointersHtml}
-        ${routingTableHtml}
-    `;
-
-        document.getElementById("details-panel").style.display = "block";
       }
 
       async function publish() {
         if (!selectedNode) return;
         const key = document.getElementById("key-input").value;
         const value = document.getElementById("value-input").value;
-        await fetch(`http://localhost:${selectedNode.httpPort}/publish`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ key, value }),
-        });
-        alert("Publish request sent!");
-        showNodeDetails(selectedNode); // Refresh details
+        if(!key || !value) return alert("Enter key and value");
+
+        try {
+            await fetch(`http://localhost:${selectedNode.httpPort}/publish`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ key, value }),
+            });
+            log("Published object: " + key);
+            showNodeDetails(selectedNode); 
+        } catch(e) { alert(e); }
       }
 
       async function find() {
         if (!selectedNode) return;
         const key = document.getElementById("key-input").value;
-        const response = await fetch(
-          `http://localhost:${selectedNode.httpPort}/find`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ key }),
-          }
-        );
-        if (response.ok) {
-          const obj = await response.json();
-          alert(`Found Object!\nKey: ${obj.Name}\nValue: ${obj.Content}`);
-        } else {
-          alert("Object not found.");
-        }
-      }
+        if(!key) return alert("Enter key");
 
-      async function unpublish() {
-        if (!selectedNode) return;
-        const key = document.getElementById("key-input").value;
-        await fetch(`http://localhost:${selectedNode.httpPort}/unpublish`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ key }),
-        });
-        alert("Unpublish request sent!");
+        try {
+            const response = await fetch(`http://localhost:${selectedNode.httpPort}/find`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ key }),
+            });
+            if (response.ok) {
+                const obj = await response.json();
+                alert(`SUCCESS!\nKey: ${obj.Key}\nData: ${obj.Data}`);
+                log(`Found object ${key}: ${obj.Data}`);
+            } else {
+                alert("Object not found in network.");
+                log(`Lookup failed for ${key}`);
+            }
+        } catch(e) { alert(e); }
       }
 
       function connectWebSocket() {
         const ws = new WebSocket("ws://localhost:3000/logs");
-        ws.onmessage = (event) => {
-          const logEntry = document.createElement("div");
-          logEntry.innerText = event.data;
-          logContainer.appendChild(logEntry);
+        ws.onmessage = (event) => log(event.data);
+        ws.onclose = () => setTimeout(connectWebSocket, 1000);
+      }
+
+      function log(msg) {
+          const div = document.createElement("div");
+          div.innerText = `> ${msg}`;
+          logContainer.appendChild(div);
           logContainer.scrollTop = logContainer.scrollHeight;
-        };
-        ws.onclose = () => {
-          setTimeout(connectWebSocket, 1000); // Try to reconnect
-        };
       }
     </script>
   </body>

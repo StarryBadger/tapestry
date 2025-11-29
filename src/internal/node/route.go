@@ -3,71 +3,71 @@ package node
 import (
 	"context"
 	"fmt"
-	"log"
 
 	pb "tapestry/api/proto"
-	"tapestry/internal/util"
-
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
+	"tapestry/internal/id"
 )
 
-func (n *Node) Route(ctx context.Context, req *pb.RouteRequest) (*pb.RouteResponse, error) {
-	log.Printf("Node %v received Route request for ID %v at level %d", n.ID, req.ID, req.Level)
-
-	if int(req.Level) == util.DIGITS {
-		log.Printf("Node %v is the root (perfect match). Terminating route.", n.ID)
-		return &pb.RouteResponse{
-			ID:   n.ID,
-			Port: int32(n.Port),
-		}, nil
+// GetNextHop determines the next node in the path towards a target ID.
+// It implements the core routing logic described in the Tapestry papers.
+func (n *Node) GetNextHop(ctx context.Context, req *pb.RouteRequest) (*pb.RouteResponse, error) {
+	// FIX: Do not use id.Parse here. Copy raw bytes directly.
+	var targetID id.ID
+	if len(req.TargetId.Bytes) != id.BYTES {
+		return nil, fmt.Errorf("invalid target ID length: %d", len(req.TargetId.Bytes))
 	}
+	copy(targetID[:], req.TargetId.Bytes)
 
-	nextDigit := util.GetDigit(req.ID, int(req.Level))
+	// 2. Compute Next Hop locally
+	nextHop, isRoot := n.computeNextHop(targetID)
 
-	for i := 0; i < util.RADIX; i++ {
-		currentDigit := (nextDigit + uint64(i)) % util.RADIX
-		nextHopPort := n.RoutingTable[req.Level][currentDigit]
-
-		if nextHopPort == -1 || nextHopPort == n.Port {
-			continue
-		}
-
-		log.Printf("Forwarding request to next hop: Port %d (at level %d)", nextHopPort, req.Level)
-		client, conn, err := GetNodeClient(nextHopPort)
-		if err != nil {
-			log.Printf("Error connecting to next hop %d: %v. Trying next surrogate.", nextHopPort, err)
-			continue
-		}
-		defer conn.Close()
-
-		res, err := client.Route(ctx, &pb.RouteRequest{
-			ID:    req.ID,
-			Level: req.Level + 1,
-		})
-
-
-		if err != nil {
-			log.Printf("RPC to next hop %d failed: %v. Trying next surrogate.", nextHopPort, err)
-			continue
-		}
-
-		return res, nil
-	}
-
-	log.Printf("Node %v could not forward, terminating as closest root.", n.ID)
+	// 3. Construct Response
 	return &pb.RouteResponse{
-		ID:   n.ID,
-		Port: int32(n.Port),
+		NextHop: nextHop.ToProto(),
+		IsRoot:  isRoot,
 	}, nil
 }
 
-func GetNodeClient(port int) (pb.NodeServiceClient, *grpc.ClientConn, error) {
-	addr := fmt.Sprintf("localhost:%d", port)
-	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		return nil, nil, err
+// computeNextHop calculates the best next hop from the local routing table.
+func (n *Node) computeNextHop(target id.ID) (Neighbor, bool) {
+	n.Table.lock.RLock()
+	defer n.Table.lock.RUnlock()
+
+	// 1. Exact Match Check
+	if n.ID.Equals(target) {
+		return Neighbor{ID: n.ID, Address: n.Address}, true
 	}
-	client := pb.NewNodeServiceClient(conn)
-	return client, conn, nil
+
+	// 2. Determine the level of matching prefix
+	level := id.SharedPrefixLength(n.ID, target)
+
+	// If we match all digits (should be caught by step 1, but safety check)
+	if level >= id.DIGITS {
+		return Neighbor{ID: n.ID, Address: n.Address}, true
+	}
+
+	// 3. Identify the desired digit for the next hop
+	desiredDigit := target.GetDigit(level)
+
+	// 4. Primary Lookup: Do we have a node with this digit?
+	primaryCandidates := n.Table.rows[level][desiredDigit]
+	if len(primaryCandidates) > 0 {
+		return primaryCandidates[0], false
+	}
+
+	// 5. Surrogate Routing (Handling Holes)
+	// Iterate (digit + 1, digit + 2 ...) mod RADIX.
+	for offset := 1; offset < id.RADIX; offset++ {
+		surrogateDigit := (desiredDigit + offset) % id.RADIX
+		surrogateCandidates := n.Table.rows[level][surrogateDigit]
+
+		if len(surrogateCandidates) > 0 {
+			return surrogateCandidates[0], false
+		}
+	}
+
+	// 6. Surrogate Root
+	// If NO entries exist in this level (except potentially ourselves),
+	// then WE are the root for this object.
+	return Neighbor{ID: n.ID, Address: n.Address}, true
 }

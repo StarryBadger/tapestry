@@ -18,8 +18,8 @@ var (
 	// Safely manage our list of running node processes
 	runningNodes      = make(map[int]*exec.Cmd)
 	nodesMutex        = &sync.Mutex{}
-	nextPort     int  = 8005
-	bootstrapPort int = 8005
+	nextPort     int  = 8000
+	bootstrapPort int = 8000
 
 	// WebSocket connections
 	upgrader = websocket.Upgrader{
@@ -63,7 +63,7 @@ func addNodeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	runningNodes[port] = cmd
-	nextPort+=100
+	nextPort+=1
 	log.Printf("Started new node on gRPC port %d and HTTP port %d", port, httpPort)
 	w.WriteHeader(http.StatusOK)
 }

@@ -19,20 +19,15 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	NodeService_Ping_FullMethodName                = "/NodeService/Ping"
-	NodeService_Route_FullMethodName               = "/NodeService/Route"
-	NodeService_RTCopy_FullMethodName              = "/NodeService/RTCopy"
-	NodeService_InformHoleMulticast_FullMethodName = "/NodeService/InformHoleMulticast"
-	NodeService_BPUpdate_FullMethodName            = "/NodeService/BPUpdate"
-	NodeService_GetID_FullMethodName               = "/NodeService/GetID"
-	NodeService_RTUpdate_FullMethodName            = "/NodeService/RTUpdate"
-	NodeService_BPRemove_FullMethodName            = "/NodeService/BPRemove"
-	NodeService_Register_FullMethodName            = "/NodeService/Register"
-	NodeService_UnRegister_FullMethodName          = "/NodeService/UnRegister"
-	NodeService_Lookup_FullMethodName              = "/NodeService/Lookup"
-	NodeService_GetObject_FullMethodName           = "/NodeService/GetObject"
-	NodeService_StoreObject_FullMethodName         = "/NodeService/StoreObject"
-	NodeService_RemoveObject_FullMethodName        = "/NodeService/RemoveObject"
+	NodeService_Ping_FullMethodName              = "/NodeService/Ping"
+	NodeService_GetNextHop_FullMethodName        = "/NodeService/GetNextHop"
+	NodeService_GetRoutingTable_FullMethodName   = "/NodeService/GetRoutingTable"
+	NodeService_AddBackpointer_FullMethodName    = "/NodeService/AddBackpointer"
+	NodeService_RemoveBackpointer_FullMethodName = "/NodeService/RemoveBackpointer"
+	NodeService_NotifyMulticast_FullMethodName   = "/NodeService/NotifyMulticast"
+	NodeService_Publish_FullMethodName           = "/NodeService/Publish"
+	NodeService_Lookup_FullMethodName            = "/NodeService/Lookup"
+	NodeService_Fetch_FullMethodName             = "/NodeService/Fetch"
 )
 
 // NodeServiceClient is the client API for NodeService service.
@@ -40,19 +35,18 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type NodeServiceClient interface {
 	Ping(ctx context.Context, in *Nothing, opts ...grpc.CallOption) (*Nothing, error)
-	Route(ctx context.Context, in *RouteRequest, opts ...grpc.CallOption) (*RouteResponse, error)
-	RTCopy(ctx context.Context, in *Nothing, opts ...grpc.CallOption) (*RTCopyResponse, error)
-	InformHoleMulticast(ctx context.Context, in *MulticastRequest, opts ...grpc.CallOption) (*MulticastResponse, error)
-	BPUpdate(ctx context.Context, in *BPUpdateRequest, opts ...grpc.CallOption) (*BPUpdateResponse, error)
-	GetID(ctx context.Context, in *GetIDRequest, opts ...grpc.CallOption) (*GetIDResponse, error)
-	RTUpdate(ctx context.Context, in *RTUpdateRequest, opts ...grpc.CallOption) (*RTUpdateResponse, error)
-	BPRemove(ctx context.Context, in *BPRemoveRequest, opts ...grpc.CallOption) (*BPRemoveResponse, error)
-	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
-	UnRegister(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
+	// Core Routing
+	GetNextHop(ctx context.Context, in *RouteRequest, opts ...grpc.CallOption) (*RouteResponse, error)
+	// Bootstrap & Maintenance
+	GetRoutingTable(ctx context.Context, in *Nothing, opts ...grpc.CallOption) (*RTCopyResponse, error)
+	AddBackpointer(ctx context.Context, in *BackpointerRequest, opts ...grpc.CallOption) (*Nothing, error)
+	RemoveBackpointer(ctx context.Context, in *Neighbor, opts ...grpc.CallOption) (*Nothing, error)
+	NotifyMulticast(ctx context.Context, in *MulticastRequest, opts ...grpc.CallOption) (*Nothing, error)
+	// DOLR
+	Publish(ctx context.Context, in *PublishRequest, opts ...grpc.CallOption) (*Nothing, error)
 	Lookup(ctx context.Context, in *LookupRequest, opts ...grpc.CallOption) (*LookupResponse, error)
-	GetObject(ctx context.Context, in *ObjectRequest, opts ...grpc.CallOption) (*ObjectResponse, error)
-	StoreObject(ctx context.Context, in *Object, opts ...grpc.CallOption) (*Ack, error)
-	RemoveObject(ctx context.Context, in *RemoveObjectRequest, opts ...grpc.CallOption) (*RemoveObjectResponse, error)
+	// Data Retrieval
+	Fetch(ctx context.Context, in *FetchRequest, opts ...grpc.CallOption) (*FetchResponse, error)
 }
 
 type nodeServiceClient struct {
@@ -73,90 +67,60 @@ func (c *nodeServiceClient) Ping(ctx context.Context, in *Nothing, opts ...grpc.
 	return out, nil
 }
 
-func (c *nodeServiceClient) Route(ctx context.Context, in *RouteRequest, opts ...grpc.CallOption) (*RouteResponse, error) {
+func (c *nodeServiceClient) GetNextHop(ctx context.Context, in *RouteRequest, opts ...grpc.CallOption) (*RouteResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(RouteResponse)
-	err := c.cc.Invoke(ctx, NodeService_Route_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, NodeService_GetNextHop_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *nodeServiceClient) RTCopy(ctx context.Context, in *Nothing, opts ...grpc.CallOption) (*RTCopyResponse, error) {
+func (c *nodeServiceClient) GetRoutingTable(ctx context.Context, in *Nothing, opts ...grpc.CallOption) (*RTCopyResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(RTCopyResponse)
-	err := c.cc.Invoke(ctx, NodeService_RTCopy_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, NodeService_GetRoutingTable_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *nodeServiceClient) InformHoleMulticast(ctx context.Context, in *MulticastRequest, opts ...grpc.CallOption) (*MulticastResponse, error) {
+func (c *nodeServiceClient) AddBackpointer(ctx context.Context, in *BackpointerRequest, opts ...grpc.CallOption) (*Nothing, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(MulticastResponse)
-	err := c.cc.Invoke(ctx, NodeService_InformHoleMulticast_FullMethodName, in, out, cOpts...)
+	out := new(Nothing)
+	err := c.cc.Invoke(ctx, NodeService_AddBackpointer_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *nodeServiceClient) BPUpdate(ctx context.Context, in *BPUpdateRequest, opts ...grpc.CallOption) (*BPUpdateResponse, error) {
+func (c *nodeServiceClient) RemoveBackpointer(ctx context.Context, in *Neighbor, opts ...grpc.CallOption) (*Nothing, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(BPUpdateResponse)
-	err := c.cc.Invoke(ctx, NodeService_BPUpdate_FullMethodName, in, out, cOpts...)
+	out := new(Nothing)
+	err := c.cc.Invoke(ctx, NodeService_RemoveBackpointer_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *nodeServiceClient) GetID(ctx context.Context, in *GetIDRequest, opts ...grpc.CallOption) (*GetIDResponse, error) {
+func (c *nodeServiceClient) NotifyMulticast(ctx context.Context, in *MulticastRequest, opts ...grpc.CallOption) (*Nothing, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetIDResponse)
-	err := c.cc.Invoke(ctx, NodeService_GetID_FullMethodName, in, out, cOpts...)
+	out := new(Nothing)
+	err := c.cc.Invoke(ctx, NodeService_NotifyMulticast_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *nodeServiceClient) RTUpdate(ctx context.Context, in *RTUpdateRequest, opts ...grpc.CallOption) (*RTUpdateResponse, error) {
+func (c *nodeServiceClient) Publish(ctx context.Context, in *PublishRequest, opts ...grpc.CallOption) (*Nothing, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(RTUpdateResponse)
-	err := c.cc.Invoke(ctx, NodeService_RTUpdate_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *nodeServiceClient) BPRemove(ctx context.Context, in *BPRemoveRequest, opts ...grpc.CallOption) (*BPRemoveResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(BPRemoveResponse)
-	err := c.cc.Invoke(ctx, NodeService_BPRemove_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *nodeServiceClient) Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(RegisterResponse)
-	err := c.cc.Invoke(ctx, NodeService_Register_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *nodeServiceClient) UnRegister(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(RegisterResponse)
-	err := c.cc.Invoke(ctx, NodeService_UnRegister_FullMethodName, in, out, cOpts...)
+	out := new(Nothing)
+	err := c.cc.Invoke(ctx, NodeService_Publish_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -173,30 +137,10 @@ func (c *nodeServiceClient) Lookup(ctx context.Context, in *LookupRequest, opts 
 	return out, nil
 }
 
-func (c *nodeServiceClient) GetObject(ctx context.Context, in *ObjectRequest, opts ...grpc.CallOption) (*ObjectResponse, error) {
+func (c *nodeServiceClient) Fetch(ctx context.Context, in *FetchRequest, opts ...grpc.CallOption) (*FetchResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ObjectResponse)
-	err := c.cc.Invoke(ctx, NodeService_GetObject_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *nodeServiceClient) StoreObject(ctx context.Context, in *Object, opts ...grpc.CallOption) (*Ack, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Ack)
-	err := c.cc.Invoke(ctx, NodeService_StoreObject_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *nodeServiceClient) RemoveObject(ctx context.Context, in *RemoveObjectRequest, opts ...grpc.CallOption) (*RemoveObjectResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(RemoveObjectResponse)
-	err := c.cc.Invoke(ctx, NodeService_RemoveObject_FullMethodName, in, out, cOpts...)
+	out := new(FetchResponse)
+	err := c.cc.Invoke(ctx, NodeService_Fetch_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -208,19 +152,18 @@ func (c *nodeServiceClient) RemoveObject(ctx context.Context, in *RemoveObjectRe
 // for forward compatibility.
 type NodeServiceServer interface {
 	Ping(context.Context, *Nothing) (*Nothing, error)
-	Route(context.Context, *RouteRequest) (*RouteResponse, error)
-	RTCopy(context.Context, *Nothing) (*RTCopyResponse, error)
-	InformHoleMulticast(context.Context, *MulticastRequest) (*MulticastResponse, error)
-	BPUpdate(context.Context, *BPUpdateRequest) (*BPUpdateResponse, error)
-	GetID(context.Context, *GetIDRequest) (*GetIDResponse, error)
-	RTUpdate(context.Context, *RTUpdateRequest) (*RTUpdateResponse, error)
-	BPRemove(context.Context, *BPRemoveRequest) (*BPRemoveResponse, error)
-	Register(context.Context, *RegisterRequest) (*RegisterResponse, error)
-	UnRegister(context.Context, *RegisterRequest) (*RegisterResponse, error)
+	// Core Routing
+	GetNextHop(context.Context, *RouteRequest) (*RouteResponse, error)
+	// Bootstrap & Maintenance
+	GetRoutingTable(context.Context, *Nothing) (*RTCopyResponse, error)
+	AddBackpointer(context.Context, *BackpointerRequest) (*Nothing, error)
+	RemoveBackpointer(context.Context, *Neighbor) (*Nothing, error)
+	NotifyMulticast(context.Context, *MulticastRequest) (*Nothing, error)
+	// DOLR
+	Publish(context.Context, *PublishRequest) (*Nothing, error)
 	Lookup(context.Context, *LookupRequest) (*LookupResponse, error)
-	GetObject(context.Context, *ObjectRequest) (*ObjectResponse, error)
-	StoreObject(context.Context, *Object) (*Ack, error)
-	RemoveObject(context.Context, *RemoveObjectRequest) (*RemoveObjectResponse, error)
+	// Data Retrieval
+	Fetch(context.Context, *FetchRequest) (*FetchResponse, error)
 	mustEmbedUnimplementedNodeServiceServer()
 }
 
@@ -234,44 +177,29 @@ type UnimplementedNodeServiceServer struct{}
 func (UnimplementedNodeServiceServer) Ping(context.Context, *Nothing) (*Nothing, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
 }
-func (UnimplementedNodeServiceServer) Route(context.Context, *RouteRequest) (*RouteResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Route not implemented")
+func (UnimplementedNodeServiceServer) GetNextHop(context.Context, *RouteRequest) (*RouteResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetNextHop not implemented")
 }
-func (UnimplementedNodeServiceServer) RTCopy(context.Context, *Nothing) (*RTCopyResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RTCopy not implemented")
+func (UnimplementedNodeServiceServer) GetRoutingTable(context.Context, *Nothing) (*RTCopyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetRoutingTable not implemented")
 }
-func (UnimplementedNodeServiceServer) InformHoleMulticast(context.Context, *MulticastRequest) (*MulticastResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method InformHoleMulticast not implemented")
+func (UnimplementedNodeServiceServer) AddBackpointer(context.Context, *BackpointerRequest) (*Nothing, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddBackpointer not implemented")
 }
-func (UnimplementedNodeServiceServer) BPUpdate(context.Context, *BPUpdateRequest) (*BPUpdateResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method BPUpdate not implemented")
+func (UnimplementedNodeServiceServer) RemoveBackpointer(context.Context, *Neighbor) (*Nothing, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveBackpointer not implemented")
 }
-func (UnimplementedNodeServiceServer) GetID(context.Context, *GetIDRequest) (*GetIDResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetID not implemented")
+func (UnimplementedNodeServiceServer) NotifyMulticast(context.Context, *MulticastRequest) (*Nothing, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method NotifyMulticast not implemented")
 }
-func (UnimplementedNodeServiceServer) RTUpdate(context.Context, *RTUpdateRequest) (*RTUpdateResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RTUpdate not implemented")
-}
-func (UnimplementedNodeServiceServer) BPRemove(context.Context, *BPRemoveRequest) (*BPRemoveResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method BPRemove not implemented")
-}
-func (UnimplementedNodeServiceServer) Register(context.Context, *RegisterRequest) (*RegisterResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Register not implemented")
-}
-func (UnimplementedNodeServiceServer) UnRegister(context.Context, *RegisterRequest) (*RegisterResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UnRegister not implemented")
+func (UnimplementedNodeServiceServer) Publish(context.Context, *PublishRequest) (*Nothing, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Publish not implemented")
 }
 func (UnimplementedNodeServiceServer) Lookup(context.Context, *LookupRequest) (*LookupResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Lookup not implemented")
 }
-func (UnimplementedNodeServiceServer) GetObject(context.Context, *ObjectRequest) (*ObjectResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetObject not implemented")
-}
-func (UnimplementedNodeServiceServer) StoreObject(context.Context, *Object) (*Ack, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method StoreObject not implemented")
-}
-func (UnimplementedNodeServiceServer) RemoveObject(context.Context, *RemoveObjectRequest) (*RemoveObjectResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RemoveObject not implemented")
+func (UnimplementedNodeServiceServer) Fetch(context.Context, *FetchRequest) (*FetchResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Fetch not implemented")
 }
 func (UnimplementedNodeServiceServer) mustEmbedUnimplementedNodeServiceServer() {}
 func (UnimplementedNodeServiceServer) testEmbeddedByValue()                     {}
@@ -312,164 +240,110 @@ func _NodeService_Ping_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
-func _NodeService_Route_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _NodeService_GetNextHop_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RouteRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(NodeServiceServer).Route(ctx, in)
+		return srv.(NodeServiceServer).GetNextHop(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: NodeService_Route_FullMethodName,
+		FullMethod: NodeService_GetNextHop_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NodeServiceServer).Route(ctx, req.(*RouteRequest))
+		return srv.(NodeServiceServer).GetNextHop(ctx, req.(*RouteRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _NodeService_RTCopy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _NodeService_GetRoutingTable_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Nothing)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(NodeServiceServer).RTCopy(ctx, in)
+		return srv.(NodeServiceServer).GetRoutingTable(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: NodeService_RTCopy_FullMethodName,
+		FullMethod: NodeService_GetRoutingTable_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NodeServiceServer).RTCopy(ctx, req.(*Nothing))
+		return srv.(NodeServiceServer).GetRoutingTable(ctx, req.(*Nothing))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _NodeService_InformHoleMulticast_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _NodeService_AddBackpointer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BackpointerRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NodeServiceServer).AddBackpointer(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NodeService_AddBackpointer_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NodeServiceServer).AddBackpointer(ctx, req.(*BackpointerRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NodeService_RemoveBackpointer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Neighbor)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NodeServiceServer).RemoveBackpointer(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NodeService_RemoveBackpointer_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NodeServiceServer).RemoveBackpointer(ctx, req.(*Neighbor))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NodeService_NotifyMulticast_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MulticastRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(NodeServiceServer).InformHoleMulticast(ctx, in)
+		return srv.(NodeServiceServer).NotifyMulticast(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: NodeService_InformHoleMulticast_FullMethodName,
+		FullMethod: NodeService_NotifyMulticast_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NodeServiceServer).InformHoleMulticast(ctx, req.(*MulticastRequest))
+		return srv.(NodeServiceServer).NotifyMulticast(ctx, req.(*MulticastRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _NodeService_BPUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(BPUpdateRequest)
+func _NodeService_Publish_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PublishRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(NodeServiceServer).BPUpdate(ctx, in)
+		return srv.(NodeServiceServer).Publish(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: NodeService_BPUpdate_FullMethodName,
+		FullMethod: NodeService_Publish_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NodeServiceServer).BPUpdate(ctx, req.(*BPUpdateRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _NodeService_GetID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetIDRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(NodeServiceServer).GetID(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: NodeService_GetID_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NodeServiceServer).GetID(ctx, req.(*GetIDRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _NodeService_RTUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RTUpdateRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(NodeServiceServer).RTUpdate(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: NodeService_RTUpdate_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NodeServiceServer).RTUpdate(ctx, req.(*RTUpdateRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _NodeService_BPRemove_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(BPRemoveRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(NodeServiceServer).BPRemove(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: NodeService_BPRemove_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NodeServiceServer).BPRemove(ctx, req.(*BPRemoveRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _NodeService_Register_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RegisterRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(NodeServiceServer).Register(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: NodeService_Register_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NodeServiceServer).Register(ctx, req.(*RegisterRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _NodeService_UnRegister_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RegisterRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(NodeServiceServer).UnRegister(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: NodeService_UnRegister_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NodeServiceServer).UnRegister(ctx, req.(*RegisterRequest))
+		return srv.(NodeServiceServer).Publish(ctx, req.(*PublishRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -492,56 +366,20 @@ func _NodeService_Lookup_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
-func _NodeService_GetObject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ObjectRequest)
+func _NodeService_Fetch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FetchRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(NodeServiceServer).GetObject(ctx, in)
+		return srv.(NodeServiceServer).Fetch(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: NodeService_GetObject_FullMethodName,
+		FullMethod: NodeService_Fetch_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NodeServiceServer).GetObject(ctx, req.(*ObjectRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _NodeService_StoreObject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Object)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(NodeServiceServer).StoreObject(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: NodeService_StoreObject_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NodeServiceServer).StoreObject(ctx, req.(*Object))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _NodeService_RemoveObject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RemoveObjectRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(NodeServiceServer).RemoveObject(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: NodeService_RemoveObject_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NodeServiceServer).RemoveObject(ctx, req.(*RemoveObjectRequest))
+		return srv.(NodeServiceServer).Fetch(ctx, req.(*FetchRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -558,56 +396,36 @@ var NodeService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _NodeService_Ping_Handler,
 		},
 		{
-			MethodName: "Route",
-			Handler:    _NodeService_Route_Handler,
+			MethodName: "GetNextHop",
+			Handler:    _NodeService_GetNextHop_Handler,
 		},
 		{
-			MethodName: "RTCopy",
-			Handler:    _NodeService_RTCopy_Handler,
+			MethodName: "GetRoutingTable",
+			Handler:    _NodeService_GetRoutingTable_Handler,
 		},
 		{
-			MethodName: "InformHoleMulticast",
-			Handler:    _NodeService_InformHoleMulticast_Handler,
+			MethodName: "AddBackpointer",
+			Handler:    _NodeService_AddBackpointer_Handler,
 		},
 		{
-			MethodName: "BPUpdate",
-			Handler:    _NodeService_BPUpdate_Handler,
+			MethodName: "RemoveBackpointer",
+			Handler:    _NodeService_RemoveBackpointer_Handler,
 		},
 		{
-			MethodName: "GetID",
-			Handler:    _NodeService_GetID_Handler,
+			MethodName: "NotifyMulticast",
+			Handler:    _NodeService_NotifyMulticast_Handler,
 		},
 		{
-			MethodName: "RTUpdate",
-			Handler:    _NodeService_RTUpdate_Handler,
-		},
-		{
-			MethodName: "BPRemove",
-			Handler:    _NodeService_BPRemove_Handler,
-		},
-		{
-			MethodName: "Register",
-			Handler:    _NodeService_Register_Handler,
-		},
-		{
-			MethodName: "UnRegister",
-			Handler:    _NodeService_UnRegister_Handler,
+			MethodName: "Publish",
+			Handler:    _NodeService_Publish_Handler,
 		},
 		{
 			MethodName: "Lookup",
 			Handler:    _NodeService_Lookup_Handler,
 		},
 		{
-			MethodName: "GetObject",
-			Handler:    _NodeService_GetObject_Handler,
-		},
-		{
-			MethodName: "StoreObject",
-			Handler:    _NodeService_StoreObject_Handler,
-		},
-		{
-			MethodName: "RemoveObject",
-			Handler:    _NodeService_RemoveObject_Handler,
+			MethodName: "Fetch",
+			Handler:    _NodeService_Fetch_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

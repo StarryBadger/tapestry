@@ -4,121 +4,96 @@ option go_package = "tapestry/api/proto";
 
 message Nothing {}
 
-message RouteRequest {
-    uint64 ID = 1;
-    int32 Level = 2;
+// --- Core Data Structures ---
+
+message NodeID {
+    bytes bytes = 1;
 }
 
-message RouteResponse {
-    uint64 ID = 1;
-    int32 Port = 2;
+message Neighbor {
+    NodeID id = 1;
+    string address = 2; // "IP:Port"
 }
+
+message RoutingTableEntry {
+    repeated Neighbor neighbors = 1;
+}
+
+// --- Dynamic Node Management ---
 
 message RTCopyResponse {
-    repeated int32 Data = 1;
-    int32 Rows = 2;
-    int32 Cols = 3;
+    repeated RoutingTableEntry entries = 1; 
+    int32 rows = 2; 
+    int32 cols = 3; 
 }
 
 message MulticastRequest {
-    int32 NewPort = 1;
-    uint64 NewID = 2;
-    int32 OriginalLevel = 3;
-    int32 Level = 4;
+    Neighbor new_node = 1;
+    int32 level = 2; 
 }
 
-message MulticastResponse {
-    int32 Status = 1;
+message BackpointerRequest {
+    Neighbor from = 1;
+    int32 level = 2; 
 }
 
-message BPUpdateRequest {
-    uint64 ID = 1;
-    int32 Port = 2;
+// --- Routing & Object Location (DOLR) ---
+
+message RouteRequest {
+    NodeID target_id = 1;
+    NodeID source_id = 2; 
 }
 
-message BPUpdateResponse {
-    bool Success = 1;
+message RouteResponse {
+    Neighbor next_hop = 1; 
+    bool is_root = 2;      
 }
 
-message GetIDRequest {}
-
-message GetIDResponse {
-    uint64 ID = 1;
+message PublishRequest {
+    NodeID object_id = 1;
+    Neighbor publisher = 2; 
+    int32 hop_limit = 3; // Required to prevent infinite loops
 }
-
-message RTUpdateRequest {
-    uint64 ReplacementID = 1;
-    int32 ReplacementPort = 2;
-    uint64 ID = 3;
-    int32 Port = 4;
-}
-
-message RTUpdateResponse {
-    bool Success = 1;
-}
-
-message BPRemoveRequest {
-    int32 Port = 1;
-}
-
-message BPRemoveResponse {
-    bool Success = 1;
-}
-
-message Object {
-    string Name = 1;
-    string Content = 2;
-}
-
-message Ack {
-    bool Success = 1;
-}
-
-message RegisterRequest {
-    int32 Port = 1;
-    uint64 ObjectID = 2;
-}
-
-message RegisterResponse {}
 
 message LookupRequest {
-    uint64 ObjectID = 1;
+    NodeID object_id = 1;
+    int32 hop_limit = 2; // Required to prevent infinite loops
 }
 
 message LookupResponse {
-    int32 Port = 1; // -1 if not found
+    Neighbor publisher = 1; 
+    bool found = 2;         
 }
 
-message ObjectRequest {
-    uint64 ObjectID = 1;
+// --- Data Retrieval ---
+
+message FetchRequest {
+    string key = 1;
 }
 
-message ObjectResponse {
-    string Name = 1;
-    string Content = 2;
+message FetchResponse {
+    string data = 1;
+    bool found = 2;
 }
 
-message RemoveObjectRequest {
-    uint64 ObjectID = 1;
-}
-
-message RemoveObjectResponse {}
-
+// --- Service Definition ---
 
 service NodeService {
     rpc Ping(Nothing) returns (Nothing);
-    rpc Route(RouteRequest) returns (RouteResponse);
-    rpc RTCopy(Nothing) returns (RTCopyResponse);
-    rpc InformHoleMulticast(MulticastRequest) returns (MulticastResponse);
-    rpc BPUpdate(BPUpdateRequest) returns (BPUpdateResponse);
-    rpc GetID(GetIDRequest) returns (GetIDResponse);
-    rpc RTUpdate(RTUpdateRequest) returns (RTUpdateResponse);
-    rpc BPRemove(BPRemoveRequest) returns (BPRemoveResponse);
+    
+    // Core Routing
+    rpc GetNextHop(RouteRequest) returns (RouteResponse);
+    
+    // Bootstrap & Maintenance
+    rpc GetRoutingTable(Nothing) returns (RTCopyResponse);
+    rpc AddBackpointer(BackpointerRequest) returns (Nothing);
+    rpc RemoveBackpointer(Neighbor) returns (Nothing);
+    rpc NotifyMulticast(MulticastRequest) returns (Nothing);
 
-    rpc Register(RegisterRequest) returns (RegisterResponse);
-    rpc UnRegister(RegisterRequest) returns (RegisterResponse); // Uses the same message
+    // DOLR
+    rpc Publish(PublishRequest) returns (Nothing);
     rpc Lookup(LookupRequest) returns (LookupResponse);
-    rpc GetObject(ObjectRequest) returns (ObjectResponse);
-    rpc StoreObject(Object) returns (Ack);
-    rpc RemoveObject(RemoveObjectRequest) returns (RemoveObjectResponse);
+    
+    // Data Retrieval
+    rpc Fetch(FetchRequest) returns (FetchResponse);
 }
