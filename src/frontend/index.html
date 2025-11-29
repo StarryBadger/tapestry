@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Tapestry Frontend</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        display: flex;
+        height: 100vh;
+        margin: 0;
+        background-color: #f0f2f5;
+      }
+      .sidebar {
+        width: 350px;
+        padding: 20px;
+        border-right: 1px solid #ccc;
+        background-color: #fff;
+        display: flex;
+        flex-direction: column;
+      }
+      .main-content {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+      }
+      .ring-container {
+        flex-grow: 1;
+        position: relative;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: #fafafa;
+      }
+      .log-container {
+        height: 200px;
+        border: 1px solid #ddd;
+        overflow-y: scroll;
+        padding: 10px;
+        margin-top: 20px;
+        background-color: #333;
+        color: #eee;
+        font-family: monospace;
+        font-size: 12px;
+        border-radius: 8px;
+      }
+      .node {
+        position: absolute;
+        width: 60px;
+        height: 60px;
+        background-color: #007bff;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+      .node:hover {
+        transform: scale(1.1);
+      }
+      .details-panel {
+        display: none;
+      }
+      h2,
+      h3 {
+        color: #333;
+      }
+      button {
+        padding: 8px 12px;
+        border: none;
+        background-color: #28a745;
+        color: white;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-right: 10px;
+      }
+      button:hover {
+        opacity: 0.9;
+      }
+      input {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        margin-bottom: 10px;
+        width: calc(100% - 18px);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+      }
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 4px;
+        text-align: left;
+      }
+      th {
+        background-color: #f2f2f2;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="sidebar">
+      <h2>Controls</h2>
+      <button onclick="addNode()">Add Node</button>
+      <hr />
+      <div id="details-panel" class="details-panel">
+        <h3 id="details-title">Node Details</h3>
+        <div id="details-content"></div>
+        <h4>Actions</h4>
+        <input id="key-input" placeholder="Key" />
+        <input id="value-input" placeholder="Value (for publish)" />
+        <button onclick="publish()">Publish</button>
+        <button onclick="find()">Find</button>
+        <button onclick="unpublish()">Unpublish</button>
+      </div>
+    </div>
+    <div class="main-content">
+      <div class="ring-container" id="ring-container"></div>
+      <div class="log-container" id="log-container"></div>
+    </div>
+    <script>
+      let selectedNode = null;
+      const logContainer = document.getElementById("log-container");
+
+      // Fetch and display nodes on load
+      window.onload = () => {
+        fetchNodes();
+        connectWebSocket();
+      };
+
+      async function fetchNodes() {
+        const response = await fetch("/nodes");
+        const nodes = await response.json();
+        const ring = document.getElementById("ring-container");
+        ring.innerHTML = "";
+        const radius = Math.min(ring.clientWidth, ring.clientHeight) / 2 - 40;
+        const centerX = ring.clientWidth / 2;
+        const centerY = ring.clientHeight / 2;
+
+        nodes.forEach((node, i) => {
+          const angle = (i / nodes.length) * 2 * Math.PI;
+          const x = centerX + radius * Math.cos(angle) - 30;
+          const y = centerY + radius * Math.sin(angle) - 30;
+
+          const nodeEl = document.createElement("div");
+          nodeEl.className = "node";
+          nodeEl.style.left = `${x}px`;
+          nodeEl.style.top = `${y}px`;
+          nodeEl.innerText = node.port;
+          nodeEl.onclick = () => showNodeDetails(node);
+          ring.appendChild(nodeEl);
+        });
+      }
+
+      async function addNode() {
+        await fetch("/add-node", { method: "POST" });
+        fetchNodes();
+      }
+
+      // Replace the existing showNodeDetails function with this new version.
+
+      async function showNodeDetails(node) {
+        selectedNode = node;
+        const response = await fetch(
+          `http://localhost:${node.httpPort}/status`
+        );
+        if (!response.ok) {
+          alert(
+            `Could not fetch status for node ${node.port}. It might have shut down.`
+          );
+          return;
+        }
+        const status = await response.json();
+
+        document.getElementById(
+          "details-title"
+        ).innerText = `Node ${status.port} Details`;
+        const content = document.getElementById("details-content");
+
+        // --- Build HTML for Stored Objects ---
+        let objectsHtml = "<h4>Stored Objects</h4>";
+        if (status.objects && status.objects.length > 0) {
+          objectsHtml += "<table><tr><th>Key</th><th>Value</th></tr>";
+          status.objects.forEach((o) => {
+            objectsHtml += `<tr><td>${o.Name}</td><td>${o.Content}</td></tr>`;
+          });
+          objectsHtml += "</table>";
+        } else {
+          objectsHtml += "<p>None</p>";
+        }
+
+        // --- Build HTML for Backpointers ---
+        let backpointersHtml = "<h4>Backpointers</h4>";
+        if (status.backpointers && status.backpointers.length > 0) {
+          backpointersHtml += `<p>${status.backpointers.join(", ")}</p>`;
+        } else {
+          backpointersHtml += "<p>None</p>";
+        }
+
+        // --- Build HTML for Routing Table ---
+        let routingTableHtml = "<h4>Routing Table</h4>";
+        if (status.routingTable && status.routingTable.length > 0) {
+          routingTableHtml +=
+            "<table><tr><th>Lvl</th><th>0</th><th>1</th><th>2</th><th>3</th></tr>";
+          // Display first 10 levels for brevity
+          for (let i = 0; i < 10 && i < status.routingTable.length; i++) {
+            const row = status.routingTable[i];
+            routingTableHtml += `<tr><td><strong>${i}</strong></td>`;
+            row.forEach((port) => {
+              // Use a dot for empty slots (-1)
+              routingTableHtml += `<td>${port === -1 ? "." : port}</td>`;
+            });
+            routingTableHtml += "</tr>";
+          }
+          routingTableHtml += "</table>";
+        } else {
+          routingTableHtml += "<p>Empty</p>";
+        }
+
+        // --- Assemble the final HTML ---
+        content.innerHTML = `
+        <p><strong>ID:</strong> ${status.id.substring(0, 10)}...</p>
+        ${objectsHtml}
+        ${backpointersHtml}
+        ${routingTableHtml}
+    `;
+
+        document.getElementById("details-panel").style.display = "block";
+      }
+
+      async function publish() {
+        if (!selectedNode) return;
+        const key = document.getElementById("key-input").value;
+        const value = document.getElementById("value-input").value;
+        await fetch(`http://localhost:${selectedNode.httpPort}/publish`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ key, value }),
+        });
+        alert("Publish request sent!");
+        showNodeDetails(selectedNode); // Refresh details
+      }
+
+      async function find() {
+        if (!selectedNode) return;
+        const key = document.getElementById("key-input").value;
+        const response = await fetch(
+          `http://localhost:${selectedNode.httpPort}/find`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ key }),
+          }
+        );
+        if (response.ok) {
+          const obj = await response.json();
+          alert(`Found Object!\nKey: ${obj.Name}\nValue: ${obj.Content}`);
+        } else {
+          alert("Object not found.");
+        }
+      }
+
+      async function unpublish() {
+        if (!selectedNode) return;
+        const key = document.getElementById("key-input").value;
+        await fetch(`http://localhost:${selectedNode.httpPort}/unpublish`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ key }),
+        });
+        alert("Unpublish request sent!");
+      }
+
+      function connectWebSocket() {
+        const ws = new WebSocket("ws://localhost:3000/logs");
+        ws.onmessage = (event) => {
+          const logEntry = document.createElement("div");
+          logEntry.innerText = event.data;
+          logContainer.appendChild(logEntry);
+          logContainer.scrollTop = logContainer.scrollHeight;
+        };
+        ws.onclose = () => {
+          setTimeout(connectWebSocket, 1000); // Try to reconnect
+        };
+      }
+    </script>
+  </body>
+</html>
