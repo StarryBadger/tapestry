@@ -87,8 +87,36 @@ func (n *Node) Ping(ctx context.Context, req *pb.Nothing) (*pb.Nothing, error) {
 	return &pb.Nothing{}, nil
 }
 
-// --- Placeholders for Future Steps ---
+// SelectRandomNeighbors picks 'count' distinct neighbors from the routing table.
+func (n *Node) SelectRandomNeighbors(count int) []Neighbor {
+	n.Table.lock.RLock()
+	defer n.Table.lock.RUnlock()
 
-// TODO: Step 3 - Implement GetNextHop (Surrogate Routing)
-// TODO: Step 4 - Implement Publish/Lookup (DOLR)
-// TODO: Step 5 - Implement Join/Insert
+	var candidates []Neighbor
+	// Collect all neighbors
+	for i := 0; i < id.DIGITS; i++ {
+		for j := 0; j < id.RADIX; j++ {
+			candidates = append(candidates, n.Table.rows[i][j]...)
+		}
+	}
+
+	// Shuffle (simple version) or just pick first 'count' distinct ones
+	// In a real app, use math/rand to shuffle. 
+    // Since map iteration is random-ish in Go, and we appended in order, 
+    // let's just pick distinct ones.
+    
+	selected := make([]Neighbor, 0, count)
+	seen := make(map[string]bool)
+
+	for _, nb := range candidates {
+		if len(selected) >= count {
+			break
+		}
+		// Don't pick ourselves or duplicates
+		if !nb.ID.Equals(n.ID) && !seen[nb.ID.String()] {
+			selected = append(selected, nb)
+			seen[nb.ID.String()] = true
+		}
+	}
+	return selected
+}

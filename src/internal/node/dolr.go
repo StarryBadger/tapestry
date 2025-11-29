@@ -80,10 +80,17 @@ func (n *Node) Lookup(ctx context.Context, req *pb.LookupRequest) (*pb.LookupRes
 	// 2. Check Local Pointers
 	publishers := n.getLocationPointers(objectID)
 	if len(publishers) > 0 {
-		bestPub := publishers[0]
+		log.Printf("Node %s found %d pointers for %s.", n.ID, len(publishers), objectID)
+		
+		// Convert all to proto
+		var pbPublishers []*pb.Neighbor
+		for _, p := range publishers {
+			pbPublishers = append(pbPublishers, p.ToProto())
+		}
+
 		return &pb.LookupResponse{
-			Publisher: bestPub.ToProto(),
-			Found:     true,
+			Publishers: pbPublishers, 
+			Found:      true,
 		}, nil
 	}
 

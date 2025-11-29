@@ -579,7 +579,7 @@ func (x *LookupRequest) GetHopLimit() int32 {
 
 type LookupResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Publisher     *Neighbor              `protobuf:"bytes,1,opt,name=publisher,proto3" json:"publisher,omitempty"`
+	Publishers    []*Neighbor            `protobuf:"bytes,1,rep,name=publishers,proto3" json:"publishers,omitempty"`
 	Found         bool                   `protobuf:"varint,2,opt,name=found,proto3" json:"found,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -615,9 +615,9 @@ func (*LookupResponse) Descriptor() ([]byte, []int) {
 	return file_api_proto_node_proto_rawDescGZIP(), []int{11}
 }
 
-func (x *LookupResponse) GetPublisher() *Neighbor {
+func (x *LookupResponse) GetPublishers() []*Neighbor {
 	if x != nil {
-		return x.Publisher
+		return x.Publishers
 	}
 	return nil
 }
@@ -625,6 +625,102 @@ func (x *LookupResponse) GetPublisher() *Neighbor {
 func (x *LookupResponse) GetFound() bool {
 	if x != nil {
 		return x.Found
+	}
+	return false
+}
+
+type ReplicateRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Key           string                 `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	Data          string                 `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReplicateRequest) Reset() {
+	*x = ReplicateRequest{}
+	mi := &file_api_proto_node_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReplicateRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReplicateRequest) ProtoMessage() {}
+
+func (x *ReplicateRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_node_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReplicateRequest.ProtoReflect.Descriptor instead.
+func (*ReplicateRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_node_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *ReplicateRequest) GetKey() string {
+	if x != nil {
+		return x.Key
+	}
+	return ""
+}
+
+func (x *ReplicateRequest) GetData() string {
+	if x != nil {
+		return x.Data
+	}
+	return ""
+}
+
+type Ack struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Ack) Reset() {
+	*x = Ack{}
+	mi := &file_api_proto_node_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Ack) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Ack) ProtoMessage() {}
+
+func (x *Ack) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_node_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Ack.ProtoReflect.Descriptor instead.
+func (*Ack) Descriptor() ([]byte, []int) {
+	return file_api_proto_node_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *Ack) GetSuccess() bool {
+	if x != nil {
+		return x.Success
 	}
 	return false
 }
@@ -638,7 +734,7 @@ type FetchRequest struct {
 
 func (x *FetchRequest) Reset() {
 	*x = FetchRequest{}
-	mi := &file_api_proto_node_proto_msgTypes[12]
+	mi := &file_api_proto_node_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -650,7 +746,7 @@ func (x *FetchRequest) String() string {
 func (*FetchRequest) ProtoMessage() {}
 
 func (x *FetchRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_node_proto_msgTypes[12]
+	mi := &file_api_proto_node_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -663,7 +759,7 @@ func (x *FetchRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FetchRequest.ProtoReflect.Descriptor instead.
 func (*FetchRequest) Descriptor() ([]byte, []int) {
-	return file_api_proto_node_proto_rawDescGZIP(), []int{12}
+	return file_api_proto_node_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *FetchRequest) GetKey() string {
@@ -683,7 +779,7 @@ type FetchResponse struct {
 
 func (x *FetchResponse) Reset() {
 	*x = FetchResponse{}
-	mi := &file_api_proto_node_proto_msgTypes[13]
+	mi := &file_api_proto_node_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -695,7 +791,7 @@ func (x *FetchResponse) String() string {
 func (*FetchResponse) ProtoMessage() {}
 
 func (x *FetchResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_proto_node_proto_msgTypes[13]
+	mi := &file_api_proto_node_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -708,7 +804,7 @@ func (x *FetchResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FetchResponse.ProtoReflect.Descriptor instead.
 func (*FetchResponse) Descriptor() ([]byte, []int) {
-	return file_api_proto_node_proto_rawDescGZIP(), []int{13}
+	return file_api_proto_node_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *FetchResponse) GetData() string {
@@ -760,15 +856,22 @@ const file_api_proto_node_proto_rawDesc = "" +
 	"\thop_limit\x18\x03 \x01(\x05R\bhopLimit\"R\n" +
 	"\rLookupRequest\x12$\n" +
 	"\tobject_id\x18\x01 \x01(\v2\a.NodeIDR\bobjectId\x12\x1b\n" +
-	"\thop_limit\x18\x02 \x01(\x05R\bhopLimit\"O\n" +
-	"\x0eLookupResponse\x12'\n" +
-	"\tpublisher\x18\x01 \x01(\v2\t.NeighborR\tpublisher\x12\x14\n" +
-	"\x05found\x18\x02 \x01(\bR\x05found\" \n" +
+	"\thop_limit\x18\x02 \x01(\x05R\bhopLimit\"Q\n" +
+	"\x0eLookupResponse\x12)\n" +
+	"\n" +
+	"publishers\x18\x01 \x03(\v2\t.NeighborR\n" +
+	"publishers\x12\x14\n" +
+	"\x05found\x18\x02 \x01(\bR\x05found\"8\n" +
+	"\x10ReplicateRequest\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x12\n" +
+	"\x04data\x18\x02 \x01(\tR\x04data\"\x1f\n" +
+	"\x03Ack\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\" \n" +
 	"\fFetchRequest\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\"9\n" +
 	"\rFetchResponse\x12\x12\n" +
 	"\x04data\x18\x01 \x01(\tR\x04data\x12\x14\n" +
-	"\x05found\x18\x02 \x01(\bR\x05found2\x88\x03\n" +
+	"\x05found\x18\x02 \x01(\bR\x05found2\xae\x03\n" +
 	"\vNodeService\x12\x1a\n" +
 	"\x04Ping\x12\b.Nothing\x1a\b.Nothing\x12+\n" +
 	"\n" +
@@ -779,7 +882,8 @@ const file_api_proto_node_proto_rawDesc = "" +
 	"\x0fNotifyMulticast\x12\x11.MulticastRequest\x1a\b.Nothing\x12$\n" +
 	"\aPublish\x12\x0f.PublishRequest\x1a\b.Nothing\x12)\n" +
 	"\x06Lookup\x12\x0e.LookupRequest\x1a\x0f.LookupResponse\x12&\n" +
-	"\x05Fetch\x12\r.FetchRequest\x1a\x0e.FetchResponseB\x14Z\x12tapestry/api/protob\x06proto3"
+	"\x05Fetch\x12\r.FetchRequest\x1a\x0e.FetchResponse\x12$\n" +
+	"\tReplicate\x12\x11.ReplicateRequest\x1a\x04.AckB\x14Z\x12tapestry/api/protob\x06proto3"
 
 var (
 	file_api_proto_node_proto_rawDescOnce sync.Once
@@ -793,7 +897,7 @@ func file_api_proto_node_proto_rawDescGZIP() []byte {
 	return file_api_proto_node_proto_rawDescData
 }
 
-var file_api_proto_node_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
+var file_api_proto_node_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
 var file_api_proto_node_proto_goTypes = []any{
 	(*Nothing)(nil),            // 0: Nothing
 	(*NodeID)(nil),             // 1: NodeID
@@ -807,8 +911,10 @@ var file_api_proto_node_proto_goTypes = []any{
 	(*PublishRequest)(nil),     // 9: PublishRequest
 	(*LookupRequest)(nil),      // 10: LookupRequest
 	(*LookupResponse)(nil),     // 11: LookupResponse
-	(*FetchRequest)(nil),       // 12: FetchRequest
-	(*FetchResponse)(nil),      // 13: FetchResponse
+	(*ReplicateRequest)(nil),   // 12: ReplicateRequest
+	(*Ack)(nil),                // 13: Ack
+	(*FetchRequest)(nil),       // 14: FetchRequest
+	(*FetchResponse)(nil),      // 15: FetchResponse
 }
 var file_api_proto_node_proto_depIdxs = []int32{
 	1,  // 0: Neighbor.id:type_name -> NodeID
@@ -822,7 +928,7 @@ var file_api_proto_node_proto_depIdxs = []int32{
 	1,  // 8: PublishRequest.object_id:type_name -> NodeID
 	2,  // 9: PublishRequest.publisher:type_name -> Neighbor
 	1,  // 10: LookupRequest.object_id:type_name -> NodeID
-	2,  // 11: LookupResponse.publisher:type_name -> Neighbor
+	2,  // 11: LookupResponse.publishers:type_name -> Neighbor
 	0,  // 12: NodeService.Ping:input_type -> Nothing
 	7,  // 13: NodeService.GetNextHop:input_type -> RouteRequest
 	0,  // 14: NodeService.GetRoutingTable:input_type -> Nothing
@@ -831,18 +937,20 @@ var file_api_proto_node_proto_depIdxs = []int32{
 	5,  // 17: NodeService.NotifyMulticast:input_type -> MulticastRequest
 	9,  // 18: NodeService.Publish:input_type -> PublishRequest
 	10, // 19: NodeService.Lookup:input_type -> LookupRequest
-	12, // 20: NodeService.Fetch:input_type -> FetchRequest
-	0,  // 21: NodeService.Ping:output_type -> Nothing
-	8,  // 22: NodeService.GetNextHop:output_type -> RouteResponse
-	4,  // 23: NodeService.GetRoutingTable:output_type -> RTCopyResponse
-	0,  // 24: NodeService.AddBackpointer:output_type -> Nothing
-	0,  // 25: NodeService.RemoveBackpointer:output_type -> Nothing
-	0,  // 26: NodeService.NotifyMulticast:output_type -> Nothing
-	0,  // 27: NodeService.Publish:output_type -> Nothing
-	11, // 28: NodeService.Lookup:output_type -> LookupResponse
-	13, // 29: NodeService.Fetch:output_type -> FetchResponse
-	21, // [21:30] is the sub-list for method output_type
-	12, // [12:21] is the sub-list for method input_type
+	14, // 20: NodeService.Fetch:input_type -> FetchRequest
+	12, // 21: NodeService.Replicate:input_type -> ReplicateRequest
+	0,  // 22: NodeService.Ping:output_type -> Nothing
+	8,  // 23: NodeService.GetNextHop:output_type -> RouteResponse
+	4,  // 24: NodeService.GetRoutingTable:output_type -> RTCopyResponse
+	0,  // 25: NodeService.AddBackpointer:output_type -> Nothing
+	0,  // 26: NodeService.RemoveBackpointer:output_type -> Nothing
+	0,  // 27: NodeService.NotifyMulticast:output_type -> Nothing
+	0,  // 28: NodeService.Publish:output_type -> Nothing
+	11, // 29: NodeService.Lookup:output_type -> LookupResponse
+	15, // 30: NodeService.Fetch:output_type -> FetchResponse
+	13, // 31: NodeService.Replicate:output_type -> Ack
+	22, // [22:32] is the sub-list for method output_type
+	12, // [12:22] is the sub-list for method input_type
 	12, // [12:12] is the sub-list for extension type_name
 	12, // [12:12] is the sub-list for extension extendee
 	0,  // [0:12] is the sub-list for field type_name
@@ -859,7 +967,7 @@ func file_api_proto_node_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_proto_node_proto_rawDesc), len(file_api_proto_node_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   14,
+			NumMessages:   16,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
