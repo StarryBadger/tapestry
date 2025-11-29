@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Tapestry Frontend (SHA-1)</title>
+    <title>Tapestry Frontend</title>
     <style>
       body {
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -71,7 +71,23 @@
         display: none;
         margin-top: 20px;
       }
-      h2, h3 { color: #333; }
+      h2, h3, h4, h5 { color: #333; }
+      
+      .action-group {
+        background: #f9f9f9;
+        border: 1px solid #e0e0e0;
+        padding: 10px;
+        border-radius: 6px;
+        margin-bottom: 15px;
+      }
+      .action-group h5 {
+        margin-top: 0;
+        margin-bottom: 8px;
+        font-size: 14px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 5px;
+      }
+
       button {
         padding: 8px 12px;
         border: none;
@@ -79,17 +95,24 @@
         color: white;
         border-radius: 4px;
         cursor: pointer;
-        margin-right: 10px;
-        margin-bottom: 5px;
+        width: 100%;
+        margin-top: 5px;
+      }
+      button.spawn-btn {
+        margin-bottom: 10px;
+        background-color: #007bff;
       }
       button:hover { opacity: 0.9; }
+      
       input {
         padding: 8px;
         border: 1px solid #ccc;
         border-radius: 4px;
-        margin-bottom: 10px;
-        width: calc(100% - 18px);
+        margin-bottom: 8px;
+        width: calc(100% - 18px); /* Account for padding/border */
+        font-size: 13px;
       }
+      
       table {
         width: 100%;
         border-collapse: collapse;
@@ -102,27 +125,40 @@
         text-align: center;
       }
       th { background-color: #f2f2f2; }
-      .rt-cell { font-family: monospace; }
+      .rt-cell { font-family: monospace; cursor: help; }
+      ul { padding-left: 20px; margin: 5px 0; }
     </style>
   </head>
   <body>
     <div class="sidebar">
       <h2>Tapestry Controls</h2>
-      <button onclick="addNode()">Spawn New Node</button>
+      <button class="spawn-btn" onclick="addNode()">Spawn New Node</button>
       <hr />
       
       <div id="details-panel" class="details-panel">
         <h3 id="details-title">Node Details</h3>
-        <p><strong>ID:</strong> <span id="node-id-full" style="font-family: monospace; word-break: break-all;"></span></p>
-        <p><strong>Port:</strong> <span id="node-port"></span></p>
+        <p style="font-size: 12px;"><strong>ID:</strong> <span id="node-id-full" style="font-family: monospace; word-break: break-all;"></span></p>
+        <p style="font-size: 12px;"><strong>Port:</strong> <span id="node-port"></span></p>
         
-        <div id="details-content"></div>
-
+        <!-- Action Groups -->
         <h4>Actions</h4>
-        <input id="key-input" placeholder="Object Key (e.g., 'my-file')" />
-        <input id="value-input" placeholder="Content (e.g., 'Hello World')" />
-        <button onclick="publish()">Store & Publish</button>
-        <button onclick="find()">Find & Fetch</button>
+        
+        <!-- Store & Publish Section -->
+        <div class="action-group">
+            <h5>Store & Publish Object</h5>
+            <input id="publish-key" placeholder="Key (e.g. 'my-photo')" />
+            <input id="publish-value" placeholder="Value (e.g. 'base64 data')" />
+            <button onclick="publish()">Publish</button>
+        </div>
+
+        <!-- Find & Fetch Section -->
+        <div class="action-group">
+            <h5>Find & Fetch Object</h5>
+            <input id="find-key" placeholder="Key to find" />
+            <button onclick="find()" style="background-color: #17a2b8;">Find</button>
+        </div>
+
+        <div id="details-content"></div>
       </div>
     </div>
 
@@ -153,8 +189,6 @@
 
       function renderRing(nodes) {
         const ring = document.getElementById("ring-container");
-        // Don't redraw if we are interacting (simple check)
-        // ideally we diff, but for now just clear
         ring.innerHTML = "";
         
         const radius = Math.min(ring.clientWidth, ring.clientHeight) / 2 - 50;
@@ -173,7 +207,6 @@
           nodeEl.className = "node";
           nodeEl.style.left = `${x}px`;
           nodeEl.style.top = `${y}px`;
-          // Display port as label
           nodeEl.innerText = node.port;
           nodeEl.title = `Port: ${node.port}`;
           
@@ -201,11 +234,13 @@
           let contentHtml = "";
 
           // Objects
-          contentHtml += "<h4>Stored Objects</h4>";
+          contentHtml += "<h4>Stored Objects (Local)</h4>";
           if (status.objects && status.objects.length > 0) {
             contentHtml += "<table><tr><th>Key</th><th>Data</th></tr>";
             status.objects.forEach(o => {
-              contentHtml += `<tr><td>${o.Key}</td><td>${o.Data}</td></tr>`;
+              // Truncate data if too long
+              let displayData = o.Data.length > 20 ? o.Data.substring(0, 20) + "..." : o.Data;
+              contentHtml += `<tr><td>${o.Key}</td><td>${displayData}</td></tr>`;
             });
             contentHtml += "</table>";
           } else {
@@ -224,18 +259,20 @@
             contentHtml += "<p><i>None</i></p>";
           }
 
-          // Routing Table (First 8 Levels)
-          contentHtml += "<h4>Routing Table (Top 8 Levels)</h4>";
+          // Routing Table
+          contentHtml += "<h4>Routing Table</h4>";
           if (status.routingTable && status.routingTable.length > 0) {
             contentHtml += "<table><tr><th>Lvl</th>";
+            // Dynamically adjust header based on radix. 
+            // Assuming radix 16 (0-F)
             for(let k=0; k<16; k++) contentHtml += `<th>${k.toString(16).toUpperCase()}</th>`;
             contentHtml += "</tr>";
 
-            for (let i = 0; i < 8 && i < status.routingTable.length; i++) {
+            for (let i = 0; i < status.routingTable.length; i++) {
               contentHtml += `<tr><td><strong>${i}</strong></td>`;
               status.routingTable[i].forEach(cell => {
-                const val = cell === "." ? "." : "█"; // Use block for occupied, or cell for full ID
-                const title = cell === "." ? "" : cell;
+                const val = cell === "." ? "." : "█"; 
+                const title = cell === "." ? "Empty" : cell;
                 contentHtml += `<td class="rt-cell" title="${title}">${val}</td>`;
               });
               contentHtml += "</tr>";
@@ -252,9 +289,9 @@
 
       async function publish() {
         if (!selectedNode) return;
-        const key = document.getElementById("key-input").value;
-        const value = document.getElementById("value-input").value;
-        if(!key || !value) return alert("Enter key and value");
+        const key = document.getElementById("publish-key").value;
+        const value = document.getElementById("publish-value").value;
+        if(!key || !value) return alert("Please enter both Key and Value");
 
         try {
             await fetch(`http://localhost:${selectedNode.httpPort}/publish`, {
@@ -262,15 +299,15 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ key, value }),
             });
-            log("Published object: " + key);
+            log(`Published object '${key}' on Node ${selectedNode.port}`);
             showNodeDetails(selectedNode); 
         } catch(e) { alert(e); }
       }
 
       async function find() {
         if (!selectedNode) return;
-        const key = document.getElementById("key-input").value;
-        if(!key) return alert("Enter key");
+        const key = document.getElementById("find-key").value;
+        if(!key) return alert("Please enter a Key to find");
 
         try {
             const response = await fetch(`http://localhost:${selectedNode.httpPort}/find`, {
@@ -280,11 +317,11 @@
             });
             if (response.ok) {
                 const obj = await response.json();
-                alert(`SUCCESS!\nKey: ${obj.Key}\nData: ${obj.Data}`);
-                log(`Found object ${key}: ${obj.Data}`);
+                alert(`FOUND!\nKey: ${obj.Key}\nData: ${obj.Data}`);
+                log(`Success: Found '${key}' -> ${obj.Data}`);
             } else {
                 alert("Object not found in network.");
-                log(`Lookup failed for ${key}`);
+                log(`Failed: Could not locate '${key}'`);
             }
         } catch(e) { alert(e); }
       }
