@@ -16,7 +16,6 @@ import (
 func main() {
 	portPtr := flag.Int("port", 0, "gRPC port for the node.")
 	httpPortPtr := flag.Int("httpport", 0, "HTTP port for the node's API.")
-	// Changed to string to accept "8000,8001,8002"
 	bootPtr := flag.String("boot", "", "Comma-separated list of bootstrap ports.")
 	flag.Parse()
 
@@ -35,9 +34,7 @@ func main() {
 
 	go n.StartHttpServer(*httpPortPtr)
 
-	// Handle Bootstrapping
 	if *bootPtr != "" {
-		// Allow previous nodes to start
 		time.Sleep(1 * time.Second) 
 		
 		ports := strings.Split(*bootPtr, ",")
@@ -58,7 +55,7 @@ func main() {
 		log.Printf("Node %s started as standalone (Genesis node).", n.ID)
 	}
 
-	// Cleanup logic
+
 	shutdownChan := make(chan os.Signal, 1)
 	signal.Notify(shutdownChan, syscall.SIGINT, syscall.SIGTERM)
 

@@ -40,11 +40,7 @@ func (n *Node) StartRepublishLoop() {
 	}
 }
 
-// runKeepAlives pings neighbors and backpointers to detect failures.
 func (n *Node) runKeepAlives() {
-	// 1. Check Routing Table
-	// We need to lock to iterate, but we shouldn't hold lock while pinging.
-	// Snapshot the neighbors.
 	var neighbors []Neighbor
 	n.Table.lock.RLock()
 	for i := 0; i < len(n.Table.rows); i++ {
@@ -62,7 +58,6 @@ func (n *Node) runKeepAlives() {
 		}
 	}
 
-	// 2. Check Backpointers
 	var bps []Neighbor
 	n.bpLock.RLock()
 	for _, bp := range n.Backpointers {
@@ -81,7 +76,6 @@ func (n *Node) runKeepAlives() {
 	}
 }
 
-// runPointerGC removes expired location pointers (Soft-State).
 func (n *Node) runPointerGC() {
 	n.lpLock.Lock()
 	defer n.lpLock.Unlock()
@@ -95,21 +89,17 @@ func (n *Node) runPointerGC() {
 		}
 		
 		if len(active) != len(entries) {
-			// log.Printf("[GC] Removed %d expired pointers for %s", len(entries)-len(active), key)
 			n.LocationPointers[key] = active
 		}
 		
-		// Clean up empty keys
 		if len(active) == 0 {
 			delete(n.LocationPointers, key)
 		}
 	}
 }
 
-// republishObjects re-advertises local data to refresh pointers in the network.
 func (n *Node) republishObjects() {
 	n.objLock.RLock()
-	// Copy keys to avoid holding lock during publish
 	var keys []string
 	for _, obj := range n.LocalObjects {
 		keys = append(keys, obj.Key)
@@ -117,7 +107,6 @@ func (n *Node) republishObjects() {
 	n.objLock.RUnlock()
 
 	for _, key := range keys {
-		// We use the salted publish logic from store.go
 		go n.publishSelfSalted(key)
 	}
 }

@@ -12,9 +12,7 @@ import (
 	"tapestry/internal/id"
 )
 
-// Join connects the node to the Tapestry network via a list of potential bootstrap nodes.
 func (n *Node) Join(bootstrapAddrs []string) error {
-	// 1. Shuffle the list to spread load and avoid thundering herd on the first node
 	rand.Shuffle(len(bootstrapAddrs), func(i, j int) {
 		bootstrapAddrs[i], bootstrapAddrs[j] = bootstrapAddrs[j], bootstrapAddrs[i]
 	})
@@ -23,18 +21,16 @@ func (n *Node) Join(bootstrapAddrs []string) error {
 	var err error
 	var connectedAddr string
 
-	// 2. Iterate until we find a live gateway
 	for _, addr := range bootstrapAddrs {
-		if addr == n.Address { continue } // Don't join via self
+		if addr == n.Address { continue }
 
 		log.Printf("Attempting to join via %s...", addr)
 		bsClient, err = GetClient(addr)
 		if err == nil {
-			// Check if it's actually responsive
 			_, pingErr := bsClient.Ping(context.Background(), &pb.Nothing{})
 			if pingErr == nil {
 				connectedAddr = addr
-				break // Success!
+				break
 			}
 			bsClient.Close()
 		}
@@ -47,7 +43,6 @@ func (n *Node) Join(bootstrapAddrs []string) error {
 
 	log.Printf("Successfully bonded with Gateway: %s", connectedAddr)
 
-	// 3. Find Surrogate Root for My ID
 	req := &pb.RouteRequest{
 		TargetId: &pb.NodeID{Bytes: n.ID.Bytes()},
 		SourceId: &pb.NodeID{Bytes: n.ID.Bytes()},
@@ -63,7 +58,6 @@ func (n *Node) Join(bootstrapAddrs []string) error {
 		surrogateNeighbor, _ = NeighborFromProto(resp.NextHop)
 	}
 
-	// Retry adding surrogate (Bonding)
 	added := false
 	for i := 0; i < 3; i++ {
 		if n.AddNeighborSafe(surrogateNeighbor) {
@@ -78,7 +72,6 @@ func (n *Node) Join(bootstrapAddrs []string) error {
 		log.Printf("[WARNING] Failed to bond with Surrogate %s. Node might be isolated!", surrogateNeighbor.Address)
 	}
 
-	// Copy Routing Table
 	copyClient, err := GetClient(surrogateNeighbor.Address)
 	if err == nil {
 		defer copyClient.Close()
@@ -94,8 +87,7 @@ func (n *Node) Join(bootstrapAddrs []string) error {
 }
 
 func (n *Node) populateTable(resp *pb.RTCopyResponse) {
-	// Use a semaphore to limit concurrent bonding attempts
-	sem := make(chan struct{}, 5) // Max 5 concurrent dials
+	sem := make(chan struct{}, 5) 
 	var wg sync.WaitGroup
 
 	count := 0
@@ -107,15 +99,14 @@ func (n *Node) populateTable(resp *pb.RTCopyResponse) {
 			wg.Add(1)
 			go func(neighbor Neighbor) {
 				defer wg.Done()
-				sem <- struct{}{} // Acquire
+				sem <- struct{}{} 
 				n.AddNeighborSafe(neighbor)
-				<-sem // Release
+				<-sem
 			}(nb)
 			count++
 		}
 	}
 	
-	// Wait for all attempts to finish so we don't spam logs immediately after
 	go func() {
 		wg.Wait()
 		log.Printf("Bootstrap: Processed %d candidates from surrogate table.", count)

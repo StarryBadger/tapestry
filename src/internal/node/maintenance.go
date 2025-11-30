@@ -7,7 +7,6 @@ import (
 	"tapestry/internal/id"
 )
 
-// GetRoutingTable returns the current node's routing table (flattened).
 func (n *Node) GetRoutingTable(ctx context.Context, req *pb.Nothing) (*pb.RTCopyResponse, error) {
 	n.Table.lock.RLock()
 	defer n.Table.lock.RUnlock()
@@ -31,7 +30,6 @@ func (n *Node) GetRoutingTable(ctx context.Context, req *pb.Nothing) (*pb.RTCopy
 	}, nil
 }
 
-// AddBackpointer adds a node to the backpointer set.
 func (n *Node) AddBackpointer(ctx context.Context, req *pb.BackpointerRequest) (*pb.Nothing, error) {
 	neighbor, err := NeighborFromProto(req.From)
 	if err != nil {
@@ -44,8 +42,6 @@ func (n *Node) AddBackpointer(ctx context.Context, req *pb.BackpointerRequest) (
 
 	log.Printf("Node %s added backpointer from %s", n.ID, neighbor.ID)
 
-	// Optimization: Add backpointer source to routing table with latency check
-	// We run this in a goroutine to not block the RPC response while pinging
 	go func() {
 		added := n.AddNeighborSafe(neighbor)
 		if added {

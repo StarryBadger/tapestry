@@ -50,7 +50,7 @@
         position: absolute;
         width: 50px;
         height: 50px;
-        background-color: #007bff;
+        background-color: #1f77b4;
         color: white;
         border-radius: 50%;
         display: flex;
@@ -105,7 +105,7 @@
       }
       button.spawn-btn {
         margin-bottom: 10px;
-        background-color: #007bff;
+        background-color: #1f77b4;
       }
       button:hover {
         opacity: 0.9;
@@ -116,7 +116,7 @@
         border: 1px solid #ccc;
         border-radius: 4px;
         margin-bottom: 8px;
-        width: calc(100% - 18px); /* Account for padding/border */
+        width: calc(100% - 18px);
         font-size: 13px;
       }
 
@@ -164,10 +164,8 @@
           <strong>Port:</strong> <span id="node-port"></span>
         </p>
 
-        <!-- Action Groups -->
         <h4>Actions</h4>
 
-        <!-- Store & Publish Section -->
         <div class="action-group">
           <h5>Store & Publish Object</h5>
           <input id="publish-key" placeholder="Key (e.g. 'my-photo')" />
@@ -175,7 +173,6 @@
           <button onclick="publish()">Publish</button>
         </div>
 
-        <!-- Find & Fetch Section -->
         <div class="action-group">
           <h5>Find & Fetch Object</h5>
           <input id="find-key" placeholder="Key to find" />
@@ -210,7 +207,7 @@
       window.onload = () => {
         fetchNodes();
         connectWebSocket();
-        setInterval(fetchNodes, 5000); // Auto-refresh nodes
+        setInterval(fetchNodes, 5000);
       };
 
       async function fetchNodes() {
@@ -231,7 +228,6 @@
         const centerX = ring.clientWidth / 2;
         const centerY = ring.clientHeight / 2;
 
-        // Sort nodes by port to keep visual stability
         nodes.sort((a, b) => a.port - b.port);
 
         nodes.forEach((node, i) => {
@@ -273,12 +269,10 @@
 
           let contentHtml = "";
 
-          // Objects
           contentHtml += "<h4>Stored Objects (Local)</h4>";
           if (status.objects && status.objects.length > 0) {
             contentHtml += "<table><tr><th>Key</th><th>Data</th></tr>";
             status.objects.forEach((o) => {
-              // Truncate data if too long
               let displayData =
                 o.Data.length > 20 ? o.Data.substring(0, 20) + "..." : o.Data;
               contentHtml += `<tr><td>${o.Key}</td><td>${displayData}</td></tr>`;
@@ -288,7 +282,6 @@
             contentHtml += "<p><i>Empty</i></p>";
           }
 
-          // Backpointers
           contentHtml += "<h4>Backpointers</h4>";
           if (status.backpointers && status.backpointers.length > 0) {
             contentHtml += "<ul>";
@@ -300,12 +293,9 @@
             contentHtml += "<p><i>None</i></p>";
           }
 
-          // Routing Table
           contentHtml += "<h4>Routing Table</h4>";
           if (status.routingTable && status.routingTable.length > 0) {
             contentHtml += "<table><tr><th>Lvl</th>";
-            // Dynamically adjust header based on radix.
-            // Assuming radix 16 (0-F)
             for (let k = 0; k < 16; k++)
               contentHtml += `<th>${k.toString(16).toUpperCase()}</th>`;
             contentHtml += "</tr>";
@@ -397,7 +387,6 @@
             method: "POST",
           });
           alert("Node is shutting down.");
-          // It will disappear from the ring on next refresh because fetchNodes will fail
         } catch (e) {
           console.error(e);
         }

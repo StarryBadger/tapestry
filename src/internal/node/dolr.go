@@ -3,7 +3,7 @@ package node
 import (
 	"context"
 	"log"
-	"time" // <--- Added import
+	"time" 
 
 	pb "tapestry/api/proto"
 	"tapestry/internal/id"
@@ -11,7 +11,6 @@ import (
 
 const MAX_HOPS = 20
 
-// Publish advertises an object's location to the network.
 func (n *Node) Publish(ctx context.Context, req *pb.PublishRequest) (*pb.Nothing, error) {
 	var objectID id.ID
 	copy(objectID[:], req.ObjectId.Bytes)
@@ -21,7 +20,6 @@ func (n *Node) Publish(ctx context.Context, req *pb.PublishRequest) (*pb.Nothing
 		return nil, err
 	}
 
-	// 1. Hop Limit Check
 	if req.HopLimit <= 0 {
 		if req.HopLimit == 0 {
 			req.HopLimit = MAX_HOPS
@@ -30,19 +28,15 @@ func (n *Node) Publish(ctx context.Context, req *pb.PublishRequest) (*pb.Nothing
 
 	log.Printf("Node %s handling Publish for %s (Hops Left: %d)", n.ID, objectID, req.HopLimit)
 
-	// 2. Cache the Pointer Locally (UPDATED for Soft-State)
 	n.addLocationPointer(objectID, publisher)
 
-	// 3. Compute Next Hop
 	nextHop, isRoot := n.computeNextHop(objectID)
 
-	// 4. Termination Condition
 	if isRoot || nextHop.ID.Equals(n.ID) || req.HopLimit <= 1 {
 		log.Printf("Node %s terminating Publish for %s (Root=%v, Limit=%d)", n.ID, objectID, isRoot, req.HopLimit)
 		return &pb.Nothing{}, nil
 	}
 
-	// 5. Recursive Step
 	client, err := GetClient(nextHop.Address)
 	if err != nil {
 		log.Printf("Failed to forward Publish to %s: %v", nextHop.Address, err)
@@ -54,7 +48,6 @@ func (n *Node) Publish(ctx context.Context, req *pb.PublishRequest) (*pb.Nothing
 	return client.Publish(ctx, req)
 }
 
-// Lookup searches for an object.
 func (n *Node) Lookup(ctx context.Context, req *pb.LookupRequest) (*pb.LookupResponse, error) {
 	var objectID id.ID
 	copy(objectID[:], req.ObjectId.Bytes)
@@ -63,7 +56,6 @@ func (n *Node) Lookup(ctx context.Context, req *pb.LookupRequest) (*pb.LookupRes
 		req.HopLimit = MAX_HOPS
 	}
 
-	// 2. Check Local Pointers (UPDATED to unwrap PointerEntry)
 	publishers := n.getLocationPointers(objectID)
 	if len(publishers) > 0 {
 		log.Printf("Node %s found %d pointers for %s.", n.ID, len(publishers), objectID)
@@ -79,15 +71,12 @@ func (n *Node) Lookup(ctx context.Context, req *pb.LookupRequest) (*pb.LookupRes
 		}, nil
 	}
 
-	// 3. Compute Next Hop
 	nextHop, isRoot := n.computeNextHop(objectID)
 
-	// 4. Termination
 	if isRoot || nextHop.ID.Equals(n.ID) || req.HopLimit <= 1 {
 		return &pb.LookupResponse{Found: false}, nil
 	}
 
-	// 5. Recursive Step
 	client, err := GetClient(nextHop.Address)
 	if err != nil {
 		return nil, err
@@ -98,7 +87,6 @@ func (n *Node) Lookup(ctx context.Context, req *pb.LookupRequest) (*pb.LookupRes
 	return client.Lookup(ctx, req)
 }
 
-// --- Helper Methods for Pointers (UPDATED) ---
 
 func (n *Node) addLocationPointer(objID id.ID, publisher Neighbor) {
 	n.lpLock.Lock()
@@ -106,15 +94,13 @@ func (n *Node) addLocationPointer(objID id.ID, publisher Neighbor) {
 
 	entries := n.LocationPointers[objID]
 	
-	// Check if pointer exists; if so, update timestamp
 	for _, entry := range entries {
 		if entry.Neighbor.ID.Equals(publisher.ID) {
-			entry.LastUpdated = time.Now() // Soft-State Refresh
+			entry.LastUpdated = time.Now() 
 			return 
 		}
 	}
 
-	// Create new PointerEntry with timestamp
 	n.LocationPointers[objID] = append(entries, &PointerEntry{
 		Neighbor:    publisher,
 		LastUpdated: time.Now(),
@@ -129,8 +115,6 @@ func (n *Node) getLocationPointers(objID id.ID) []Neighbor {
 	entries := n.LocationPointers[objID]
 
 	for _, entry := range entries {
-		// We could check expiration here, but the background GC thread 
-		// (in repair.go) handles removal. We just return what we have.
 		results = append(results, entry.Neighbor)
 	}
 	return results

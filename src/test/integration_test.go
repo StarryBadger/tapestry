@@ -9,7 +9,7 @@ import (
 	"tapestry/internal/node"
 )
 
-var globalPort int32 = 10000 // Global counter
+var globalPort int32 = 10000
 
 func getNextPort() int {
 	return int(atomic.AddInt32(&globalPort, 1))
@@ -19,10 +19,6 @@ func createCluster(t *testing.T, count int) []*node.Node {
 	var nodes []*node.Node
 	bootstrapAddr := ""
 	
-	// Base port for this cluster
-	// We increment by 'count' to reserve a block, but here we just grab one by one
-	// Actually, bootstrapping relies on knowing the address.
-	// Let's create the first node to define bootstrap.
 
 	for i := 0; i < count; i++ {
 		port := getNextPort()
@@ -31,19 +27,15 @@ func createCluster(t *testing.T, count int) []*node.Node {
 			t.Fatalf("Failed to create node %d: %v", i, err)
 		}
 
-		// Start Server
 		go func() {
 			if err := n.Start(); err != nil {
-				// Expected on stop
 			}
 		}()
 		time.Sleep(50 * time.Millisecond)
 
 		if i > 0 {
-			// Retry join to be robust against startup timing
 			success := false
 			for attempt := 0; attempt < 3; attempt++ {
-                // Pass slice
 				if err := n.Join([]string{bootstrapAddr}); err == nil {
 					success = true
 					break
@@ -60,7 +52,6 @@ func createCluster(t *testing.T, count int) []*node.Node {
 		nodes = append(nodes, n)
 	}
 	
-	// Wait for backpointer optimization and table population
 	time.Sleep(2 * time.Second)
 	return nodes
 }
@@ -69,20 +60,15 @@ func stopCluster(nodes []*node.Node) {
 	for _, n := range nodes {
 		n.Stop()
 	}
-	// Close connections to release file descriptors
 	node.CloseAllConnections() 
 	time.Sleep(100 * time.Millisecond)
 }
-
-// --- Tests ---
 
 func TestMeshConvergence(t *testing.T) {
 	nodeCount := 5
 	nodes := createCluster(t, nodeCount)
 	defer stopCluster(nodes)
 
-	// Check if Routing Tables are populated
-	// In a small network, tables might be sparse, but shouldn't be empty for everyone.
 	totalNeighbors := 0
 	for i, n := range nodes {
 		size := n.Table.Size()
@@ -102,17 +88,14 @@ func TestBasicDOLR(t *testing.T) {
 	key := "my-secret"
 	data := "is-secure"
 
-	// Node 0 publishes
 	t.Log("Node 0 publishing...")
 	err := nodes[0].StoreAndPublish(key, data)
 	if err != nil {
 		t.Fatalf("Publish failed: %v", err)
 	}
 
-	// Wait for pointers to propagate
 	time.Sleep(1 * time.Second)
 
-	// Node 2 Lookups
 	t.Log("Node 2 fetching...")
 	obj, err := nodes[2].Get(key)
 	if err != nil {
@@ -125,23 +108,18 @@ func TestBasicDOLR(t *testing.T) {
 }
 
 func TestReplicationFailover(t *testing.T) {
-	// Need enough nodes for 3 replicas (1 Primary + 2 Backups) + 1 Client
 	nodes := createCluster(t, 5)
 	defer stopCluster(nodes)
 
 	key := "resilient-key"
 	data := "cannot-kill-me"
 
-	// Node 0 publishes
 	nodes[0].StoreAndPublish(key, data)
-	time.Sleep(2 * time.Second) // Wait for replication RPCs
+	time.Sleep(2 * time.Second)
 
-	// Kill Node 0 (Primary)
 	t.Log("Killing Primary Node 0...")
 	nodes[0].Stop()
 	
-	// Node 4 tries to find it
-	// It should fail to contact Node 0, but succeed via backups
 	t.Log("Node 4 attempting fetch...")
 	obj, err := nodes[4].Get(key)
 	if err != nil {
@@ -156,7 +134,6 @@ func TestReplicationFailover(t *testing.T) {
 
 func TestGracefulExitHandoff(t *testing.T) {
 	nodes := createCluster(t, 3)
-	// We handle cleanup manually to avoid double-stopping the leaver
 	defer func() {
 		nodes[1].Stop()
 		nodes[2].Stop()
@@ -165,22 +142,17 @@ func TestGracefulExitHandoff(t *testing.T) {
 	key := "handoff-key"
 	data := "take-this"
 
-	// Node 0 has data
 	nodes[0].StoreAndPublish(key, data)
 	time.Sleep(1 * time.Second)
 
-	// Node 0 leaves gracefully
 	t.Log("Node 0 leaving gracefully...")
 	err := nodes[0].Leave()
 	if err != nil {
 		t.Fatalf("Leave failed: %v", err)
 	}
 
-	// Wait for handoff RPCs
 	time.Sleep(1 * time.Second)
 
-	// Node 1 tries to find data
-	// If handoff worked, Node 0 moved data to Node 1 or 2
 	t.Log("Node 1 attempting fetch...")
 	obj, err := nodes[1].Get(key)
 	if err != nil {

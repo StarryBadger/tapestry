@@ -19,16 +19,12 @@ type Object struct {
 }
 
 func (n *Node) StoreAndPublish(key string, data string) error {
-	// 1. Store Locally
 	n.storeLocal(key, data)
 
-	// 2. Publish Self (Salted)
 	go n.publishSelfSalted(key)
 
-	// 3. Select Backups
 	backups := n.SelectRandomNeighbors(REPLICATION_FACTOR - 1)
 	
-	// FIX: Explicit warning if isolation detected
 	if len(backups) == 0 {
 		log.Printf("[CRITICAL] No neighbors found for replication of '%s'. Data is NOT fault tolerant.", key)
 	} else if len(backups) < REPLICATION_FACTOR-1 {

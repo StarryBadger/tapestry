@@ -15,15 +15,13 @@ import (
 )
 
 var (
-	// Safely manage our list of running node processes
 	runningNodes      = make(map[int]*exec.Cmd)
 	nodesMutex        = &sync.Mutex{}
 	nextPort     int  = 8000
 	bootstrapPort int = 8000
 
-	// WebSocket connections
 	upgrader = websocket.Upgrader{
-		CheckOrigin: func(r *http.Request) bool { return true }, // Allow all connections
+		CheckOrigin: func(r *http.Request) bool { return true },
 	}
 	clients   = make(map[*websocket.Conn]bool)
 	clientsMutex = &sync.Mutex{}
@@ -35,16 +33,12 @@ func getBootstrapList() string {
 	for port := range runningNodes {
 		ports = append(ports, strconv.Itoa(port))
 	}
-	// Join them
 	if len(ports) == 0 {
 		return ""
 	}
-	// Pass up to 5 random nodes to keep command line short? 
-	// Or just pass all. For 20-50 nodes, passing all is fine.
 	return fmt.Sprintf("%s", join(ports, ","))
 }
 
-// Simple string join helper
 func join(strs []string, sep string) string {
 	if len(strs) == 0 { return "" }
 	if len(strs) == 1 { return strs[0] }
@@ -55,26 +49,23 @@ func join(strs []string, sep string) string {
 	return res
 }
 
-// addNodeHandler starts a new tapestry-node process.
 func addNodeHandler(w http.ResponseWriter, r *http.Request) {
 	nodesMutex.Lock()
 	defer nodesMutex.Unlock()
 
 	port := nextPort
-	httpPort := port + 1000 // Separate port for the node's own HTTP API
+	httpPort := port + 1000 
 	
 	bootList := getBootstrapList()
 
-	// Command to execute
 	cmd := exec.Command("go", "run", "tapestry/cmd/tapestry-node",
 		"-port", strconv.Itoa(port),
 		"-httpport", strconv.Itoa(httpPort),
 		"-boot", bootList)
 
-	// Capture the output of the node process to stream it as logs
 	stdout, _ := cmd.StdoutPipe()
 	stderr, _ := cmd.StderrPipe()
-	go io.Copy(os.Stdout, stdout) // Also print to manager's console
+	go io.Copy(os.Stdout, stdout) 
 	go io.Copy(os.Stderr, stderr)
 	go streamLogs(stdout)
 	go streamLogs(stderr)
@@ -87,9 +78,8 @@ func addNodeHandler(w http.ResponseWriter, r *http.Request) {
 
 	runningNodes[port] = cmd
 	
-	// --- FIX: Monitor Process Exit ---
 	go func(p int, c *exec.Cmd) {
-		c.Wait() // Blocks until the process exits
+		c.Wait() 
 		
 		nodesMutex.Lock()
 		delete(runningNodes, p)
@@ -99,14 +89,12 @@ func addNodeHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println(msg)
 		logChannel <- []byte(msg)
 	}(port, cmd)
-	// --------------------------------
 
 	nextPort++
 	log.Printf("Started new node on gRPC port %d and HTTP port %d", port, httpPort)
 	w.WriteHeader(http.StatusOK)
 }
 
-// getNodesHandler returns a list of all running nodes.
 func getNodesHandler(w http.ResponseWriter, r *http.Request) {
 	nodesMutex.Lock()
 	defer nodesMutex.Unlock()
@@ -122,7 +110,6 @@ func getNodesHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(nodes)
 }
 
-// logStreamerHandler handles WebSocket connections for live logs.
 func logStreamerHandler(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -135,7 +122,6 @@ func logStreamerHandler(w http.ResponseWriter, r *http.Request) {
 	clients[conn] = true
 	clientsMutex.Unlock()
 
-	// Keep the connection open
 	for {
 		if _, _, err := conn.NextReader(); err != nil {
 			break
@@ -147,7 +133,6 @@ func logStreamerHandler(w http.ResponseWriter, r *http.Request) {
 	clientsMutex.Unlock()
 }
 
-// streamLogs reads from a node's output and broadcasts to all WebSocket clients.
 func streamLogs(reader io.Reader) {
 	buf := make([]byte, 1024)
 	for {
@@ -159,7 +144,6 @@ func streamLogs(reader io.Reader) {
 	}
 }
 
-// broadcastLogs sends messages from the logChannel to all connected clients.
 func broadcastLogs() {
 	for msg := range logChannel {
 		clientsMutex.Lock()
@@ -180,7 +164,6 @@ func main() {
 	http.HandleFunc("/nodes", getNodesHandler)
 	http.HandleFunc("/logs", logStreamerHandler)
 
-	// Serve the frontend files
 	fs := http.FileServer(http.Dir("./frontend"))
 	http.Handle("/", fs)
 

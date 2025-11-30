@@ -5,7 +5,7 @@ import (
 )
 
 func TestGetDigit(t *testing.T) {
-	var myID uint64 = 12345 // In base 4, this is 3000321
+	var myID uint64 = 12345
 
 	expectedDigits := []uint64{1, 2, 3, 0, 0, 0, 3}
 

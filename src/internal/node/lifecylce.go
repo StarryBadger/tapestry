@@ -9,15 +9,11 @@ import (
 	pb "tapestry/api/proto"
 )
 
-// Leave initiates a graceful exit from the network.
 func (n *Node) Leave() error {
 	log.Printf("Node %s initiating graceful exit...", n.ID)
 
-	// 1. Redistribute Data
-	// We MUST wait for this to finish before shutting down.
 	n.redistributeData()
 
-	// 2. Notify Backpointers
 	n.bpLock.RLock()
 	var backpointers []Neighbor
 	for _, bp := range n.Backpointers {
@@ -37,7 +33,6 @@ func (n *Node) Leave() error {
 			}
 		}(bp)
 	}
-	// Wait for notifications with a short timeout so we don't hang forever if a neighbor is down
 	done := make(chan struct{})
 	go func() {
 		wg.Wait()
@@ -50,16 +45,13 @@ func (n *Node) Leave() error {
 		log.Println("[LEAVE] Backpointer notification timed out")
 	}
 
-	// 3. Signal Shutdown
 	n.Stop()
 	
-	// Signal main.go to exit the process
 	close(n.ExitChan)
 	
 	return nil
 }
 
-// redistributeData pushes local objects to neighbors before dying.
 func (n *Node) redistributeData() {
 	n.objLock.RLock()
 	defer n.objLock.RUnlock()
@@ -104,7 +96,6 @@ func (n *Node) redistributeData() {
 		}(target, obj.Key, obj.Data)
 	}
 	
-	// Wait for all replications to complete or timeout
 	done := make(chan struct{})
 	go func() {
 		wg.Wait()
@@ -119,7 +110,6 @@ func (n *Node) redistributeData() {
 	}
 }
 
-// NotifyLeave is the RPC handler. 
 func (n *Node) NotifyLeave(ctx context.Context, req *pb.Neighbor) (*pb.Nothing, error) {
 	leavingNode, err := NeighborFromProto(req)
 	if err != nil { return nil, err }

@@ -9,16 +9,14 @@ import (
 	"time"
 )
 
-// Status represents the full state of a node for frontend display.
 type Status struct {
 	ID           string     `json:"id"`
 	Port         int        `json:"port"`
-	RoutingTable [][]string `json:"routingTable"` // Simplified for JSON
+	RoutingTable [][]string `json:"routingTable"` 
 	Backpointers []string   `json:"backpointers"`
 	Objects      []Object   `json:"objects"`
 }
 
-// allowCORS middleware
 func allowCORS(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -38,7 +36,6 @@ func (n *Node) StartHttpServer(port int) {
 	http.HandleFunc("/status", allowCORS(n.statusHandler))
 	http.HandleFunc("/publish", allowCORS(n.publishHandler))
 	http.HandleFunc("/find", allowCORS(n.findHandler))
-	// Unpublish is not fully implemented in this version, but we leave the handler
 	http.HandleFunc("/unpublish", allowCORS(n.unpublishHandler))
 	http.HandleFunc("/leave", allowCORS(n.leaveHandler)) 
 
@@ -48,19 +45,13 @@ func (n *Node) StartHttpServer(port int) {
 }
 
 func (n *Node) statusHandler(w http.ResponseWriter, r *http.Request) {
-	// 1. Snapshot Routing Table
 	n.Table.lock.RLock()
-	// Create a simplified view: 40 levels, just showing the first neighbor in each slot
-	// If we showed 40x16 it would be too big for the frontend probably.
-	// Let's condense it. The frontend expects [][]int. We changed it to [][]string for Hex IDs.
-	// We'll just dump the first 10 levels.
 	rtDisplay := [][]string{}
 	
 	for i := 0; i < 10 && i < id.DIGITS; i++ {
 		row := make([]string, id.RADIX)
 		for j := 0; j < id.RADIX; j++ {
 			if len(n.Table.rows[i][j]) > 0 {
-				// Show ID prefix
 				row[j] = n.Table.rows[i][j][0].ID.String()[:4] + "..."
 			} else {
 				row[j] = "."
@@ -70,7 +61,6 @@ func (n *Node) statusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	n.Table.lock.RUnlock()
 
-	// 2. Snapshot Backpointers
 	n.bpLock.RLock()
 	bpDisplay := []string{}
 	for k := range n.Backpointers {
@@ -78,7 +68,6 @@ func (n *Node) statusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	n.bpLock.RUnlock()
 
-	// 3. Snapshot Objects
 	n.objLock.RLock()
 	objDisplay := []Object{}
 	for _, o := range n.LocalObjects {
@@ -134,11 +123,9 @@ func (n *Node) unpublishHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (n *Node) leaveHandler(w http.ResponseWriter, r *http.Request) {
-    // Run in goroutine so we can return response before shutting down
     go func() {
         time.Sleep(100 * time.Millisecond)
         n.Leave()
-        // In a real app, we might os.Exit(0) here or let main() handle it via channel
     }()
     w.WriteHeader(http.StatusOK)
     w.Write([]byte("Node leaving..."))
