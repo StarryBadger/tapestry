@@ -871,7 +871,7 @@ const file_api_proto_node_proto_rawDesc = "" +
 	"\x03key\x18\x01 \x01(\tR\x03key\"9\n" +
 	"\rFetchResponse\x12\x12\n" +
 	"\x04data\x18\x01 \x01(\tR\x04data\x12\x14\n" +
-	"\x05found\x18\x02 \x01(\bR\x05found2\xae\x03\n" +
+	"\x05found\x18\x02 \x01(\bR\x05found2\xd2\x03\n" +
 	"\vNodeService\x12\x1a\n" +
 	"\x04Ping\x12\b.Nothing\x1a\b.Nothing\x12+\n" +
 	"\n" +
@@ -883,7 +883,8 @@ const file_api_proto_node_proto_rawDesc = "" +
 	"\aPublish\x12\x0f.PublishRequest\x1a\b.Nothing\x12)\n" +
 	"\x06Lookup\x12\x0e.LookupRequest\x1a\x0f.LookupResponse\x12&\n" +
 	"\x05Fetch\x12\r.FetchRequest\x1a\x0e.FetchResponse\x12$\n" +
-	"\tReplicate\x12\x11.ReplicateRequest\x1a\x04.AckB\x14Z\x12tapestry/api/protob\x06proto3"
+	"\tReplicate\x12\x11.ReplicateRequest\x1a\x04.Ack\x12\"\n" +
+	"\vNotifyLeave\x12\t.Neighbor\x1a\b.NothingB\x14Z\x12tapestry/api/protob\x06proto3"
 
 var (
 	file_api_proto_node_proto_rawDescOnce sync.Once
@@ -939,18 +940,20 @@ var file_api_proto_node_proto_depIdxs = []int32{
 	10, // 19: NodeService.Lookup:input_type -> LookupRequest
 	14, // 20: NodeService.Fetch:input_type -> FetchRequest
 	12, // 21: NodeService.Replicate:input_type -> ReplicateRequest
-	0,  // 22: NodeService.Ping:output_type -> Nothing
-	8,  // 23: NodeService.GetNextHop:output_type -> RouteResponse
-	4,  // 24: NodeService.GetRoutingTable:output_type -> RTCopyResponse
-	0,  // 25: NodeService.AddBackpointer:output_type -> Nothing
-	0,  // 26: NodeService.RemoveBackpointer:output_type -> Nothing
-	0,  // 27: NodeService.NotifyMulticast:output_type -> Nothing
-	0,  // 28: NodeService.Publish:output_type -> Nothing
-	11, // 29: NodeService.Lookup:output_type -> LookupResponse
-	15, // 30: NodeService.Fetch:output_type -> FetchResponse
-	13, // 31: NodeService.Replicate:output_type -> Ack
-	22, // [22:32] is the sub-list for method output_type
-	12, // [12:22] is the sub-list for method input_type
+	2,  // 22: NodeService.NotifyLeave:input_type -> Neighbor
+	0,  // 23: NodeService.Ping:output_type -> Nothing
+	8,  // 24: NodeService.GetNextHop:output_type -> RouteResponse
+	4,  // 25: NodeService.GetRoutingTable:output_type -> RTCopyResponse
+	0,  // 26: NodeService.AddBackpointer:output_type -> Nothing
+	0,  // 27: NodeService.RemoveBackpointer:output_type -> Nothing
+	0,  // 28: NodeService.NotifyMulticast:output_type -> Nothing
+	0,  // 29: NodeService.Publish:output_type -> Nothing
+	11, // 30: NodeService.Lookup:output_type -> LookupResponse
+	15, // 31: NodeService.Fetch:output_type -> FetchResponse
+	13, // 32: NodeService.Replicate:output_type -> Ack
+	0,  // 33: NodeService.NotifyLeave:output_type -> Nothing
+	23, // [23:34] is the sub-list for method output_type
+	12, // [12:23] is the sub-list for method input_type
 	12, // [12:12] is the sub-list for extension type_name
 	12, // [12:12] is the sub-list for extension extendee
 	0,  // [0:12] is the sub-list for field type_name

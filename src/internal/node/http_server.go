@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"tapestry/internal/id"
+	"time"
 )
 
 // Status represents the full state of a node for frontend display.
@@ -39,6 +40,7 @@ func (n *Node) StartHttpServer(port int) {
 	http.HandleFunc("/find", allowCORS(n.findHandler))
 	// Unpublish is not fully implemented in this version, but we leave the handler
 	http.HandleFunc("/unpublish", allowCORS(n.unpublishHandler))
+	http.HandleFunc("/leave", allowCORS(n.leaveHandler)) 
 
 	if err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil); err != nil {
 		log.Fatalf("HTTP server failed: %v", err)
@@ -129,4 +131,15 @@ func (n *Node) unpublishHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewDecoder(r.Body).Decode(&data)
 	n.Remove(data["key"])
 	w.WriteHeader(http.StatusOK)
+}
+
+func (n *Node) leaveHandler(w http.ResponseWriter, r *http.Request) {
+    // Run in goroutine so we can return response before shutting down
+    go func() {
+        time.Sleep(100 * time.Millisecond)
+        n.Leave()
+        // In a real app, we might os.Exit(0) here or let main() handle it via channel
+    }()
+    w.WriteHeader(http.StatusOK)
+    w.Write([]byte("Node leaving..."))
 }

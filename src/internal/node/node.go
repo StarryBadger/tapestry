@@ -13,6 +13,12 @@ import (
 	"google.golang.org/grpc"
 )
 
+// PointerEntry wraps a Neighbor with a timestamp for Soft-State
+type PointerEntry struct {
+	Neighbor Neighbor
+	LastUpdated time.Time
+}
+
 type Node struct {
 	pb.UnimplementedNodeServiceServer
 
@@ -24,16 +30,14 @@ type Node struct {
 	Table            *RoutingTable
 	Backpointers     map[string]Neighbor
 	bpLock           sync.RWMutex
-	LocationPointers map[id.ID][]Neighbor
-	lpLock           sync.RWMutex
+	LocationPointers map[id.ID][]*PointerEntry
+	lpLock           sync.RWMutex	
 	LocalObjects     map[id.ID]Object
 	objLock          sync.RWMutex
+	stopChan chan struct{}
 }
 
-// NewNode creates a new Tapestry node.
-// bootstrapAddr can be empty if this is the first node.
 func NewNode(port int) (*Node, error) {
-	// Generate 160-bit SHA-1 ID
 	nodeID := id.NewRandomID()
 	address := fmt.Sprintf("localhost:%d", port)
 
@@ -50,8 +54,9 @@ func NewNode(port int) (*Node, error) {
 		Listener:         listener,
 		Table:            NewRoutingTable(nodeID),
 		Backpointers:     make(map[string]Neighbor),
-		LocationPointers: make(map[id.ID][]Neighbor),
+		LocationPointers: make(map[id.ID][]*PointerEntry),
 		LocalObjects:     make(map[id.ID]Object),
+		stopChan:         make(chan struct{}),
 	}
 
 	pb.RegisterNodeServiceServer(n.GrpcServer, n)
@@ -61,11 +66,16 @@ func NewNode(port int) (*Node, error) {
 }
 
 func (n *Node) Start() error {
+	// Start Background Maintenance Threads
+	go n.StartMaintenanceLoop()
+	go n.StartRepublishLoop()
+
 	log.Printf("Starting gRPC server on %s", n.Address)
 	return n.GrpcServer.Serve(n.Listener)
 }
 
 func (n *Node) Stop() {
+	close(n.stopChan) // Signal threads to stop
 	n.GrpcServer.GracefulStop()
 }
 

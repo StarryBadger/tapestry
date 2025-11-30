@@ -29,6 +29,7 @@ const (
 	NodeService_Lookup_FullMethodName            = "/NodeService/Lookup"
 	NodeService_Fetch_FullMethodName             = "/NodeService/Fetch"
 	NodeService_Replicate_FullMethodName         = "/NodeService/Replicate"
+	NodeService_NotifyLeave_FullMethodName       = "/NodeService/NotifyLeave"
 )
 
 // NodeServiceClient is the client API for NodeService service.
@@ -50,6 +51,8 @@ type NodeServiceClient interface {
 	Fetch(ctx context.Context, in *FetchRequest, opts ...grpc.CallOption) (*FetchResponse, error)
 	// Replication
 	Replicate(ctx context.Context, in *ReplicateRequest, opts ...grpc.CallOption) (*Ack, error)
+	// Graceful Exit
+	NotifyLeave(ctx context.Context, in *Neighbor, opts ...grpc.CallOption) (*Nothing, error)
 }
 
 type nodeServiceClient struct {
@@ -160,6 +163,16 @@ func (c *nodeServiceClient) Replicate(ctx context.Context, in *ReplicateRequest,
 	return out, nil
 }
 
+func (c *nodeServiceClient) NotifyLeave(ctx context.Context, in *Neighbor, opts ...grpc.CallOption) (*Nothing, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Nothing)
+	err := c.cc.Invoke(ctx, NodeService_NotifyLeave_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // NodeServiceServer is the server API for NodeService service.
 // All implementations must embed UnimplementedNodeServiceServer
 // for forward compatibility.
@@ -179,6 +192,8 @@ type NodeServiceServer interface {
 	Fetch(context.Context, *FetchRequest) (*FetchResponse, error)
 	// Replication
 	Replicate(context.Context, *ReplicateRequest) (*Ack, error)
+	// Graceful Exit
+	NotifyLeave(context.Context, *Neighbor) (*Nothing, error)
 	mustEmbedUnimplementedNodeServiceServer()
 }
 
@@ -218,6 +233,9 @@ func (UnimplementedNodeServiceServer) Fetch(context.Context, *FetchRequest) (*Fe
 }
 func (UnimplementedNodeServiceServer) Replicate(context.Context, *ReplicateRequest) (*Ack, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Replicate not implemented")
+}
+func (UnimplementedNodeServiceServer) NotifyLeave(context.Context, *Neighbor) (*Nothing, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method NotifyLeave not implemented")
 }
 func (UnimplementedNodeServiceServer) mustEmbedUnimplementedNodeServiceServer() {}
 func (UnimplementedNodeServiceServer) testEmbeddedByValue()                     {}
@@ -420,6 +438,24 @@ func _NodeService_Replicate_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _NodeService_NotifyLeave_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Neighbor)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NodeServiceServer).NotifyLeave(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NodeService_NotifyLeave_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NodeServiceServer).NotifyLeave(ctx, req.(*Neighbor))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // NodeService_ServiceDesc is the grpc.ServiceDesc for NodeService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -466,6 +502,10 @@ var NodeService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Replicate",
 			Handler:    _NodeService_Replicate_Handler,
+		},
+		{
+			MethodName: "NotifyLeave",
+			Handler:    _NodeService_NotifyLeave_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

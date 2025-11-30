@@ -109,4 +109,7 @@ service NodeService {
 
     //Replication
     rpc Replicate(ReplicateRequest) returns (Ack);
+
+    //Graceful Exit
+    rpc NotifyLeave(Neighbor) returns (Nothing);
 }
