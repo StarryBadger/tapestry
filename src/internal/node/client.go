@@ -19,7 +19,7 @@ type TapestryClient struct {
 // GetClient creates a connection to a remote Tapestry node.
 func GetClient(address string) (*TapestryClient, error) {
 	// Set a timeout for connection establishment
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
 	conn, err := grpc.DialContext(ctx, address, 

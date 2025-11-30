@@ -7,6 +7,7 @@ import (
 	"net"
 	"sync"
 	"time"
+	"math/rand"
 
 	pb "tapestry/api/proto"
 	"tapestry/internal/id"
@@ -34,8 +35,9 @@ type Node struct {
 	lpLock           sync.RWMutex
 	LocalObjects     map[id.ID]Object
 	objLock          sync.RWMutex
-	stopChan chan struct{} // For internal threads (maintenance)
-	ExitChan chan struct{} // NEW: For main.go to know we are done
+	stopChan     chan struct{} // For internal threads (maintenance)
+	ExitChan     chan struct{} // For main.go to know we are done
+	shutdownOnce sync.Once     // NEW: Ensure Stop() is idempotent
 }
 
 func NewNode(port int) (*Node, error) {
@@ -58,7 +60,7 @@ func NewNode(port int) (*Node, error) {
 		LocationPointers: make(map[id.ID][]*PointerEntry),
 		LocalObjects:     make(map[id.ID]Object),
 		stopChan:         make(chan struct{}),
-		ExitChan:         make(chan struct{}), // Initialize
+		ExitChan:         make(chan struct{}),
 	}
 
 	pb.RegisterNodeServiceServer(n.GrpcServer, n)
@@ -67,9 +69,6 @@ func NewNode(port int) (*Node, error) {
 	return n, nil
 }
 
-// ... (Start, Stop, Ping, SelectRandomNeighbors, Probe, AddNeighborSafe remain unchanged) ...
-// Copy them from previous steps if needed, but only NewNode changed here.
-
 func (n *Node) Start() error {
 	go n.StartMaintenanceLoop()
 	go n.StartRepublishLoop()
@@ -77,9 +76,14 @@ func (n *Node) Start() error {
 	return n.GrpcServer.Serve(n.Listener)
 }
 
+// Stop stops the node gracefully. It is safe to call multiple times.
 func (n *Node) Stop() {
-	close(n.stopChan)
-	n.GrpcServer.GracefulStop()
+	n.shutdownOnce.Do(func() {
+		close(n.stopChan)
+		if n.GrpcServer != nil {
+			n.GrpcServer.GracefulStop()
+		}
+	})
 }
 
 func (n *Node) Ping(ctx context.Context, req *pb.Nothing) (*pb.Nothing, error) {
@@ -89,14 +93,20 @@ func (n *Node) Ping(ctx context.Context, req *pb.Nothing) (*pb.Nothing, error) {
 func (n *Node) SelectRandomNeighbors(count int) []Neighbor {
 	n.Table.lock.RLock()
 	defer n.Table.lock.RUnlock()
+
 	var candidates []Neighbor
 	for i := 0; i < id.DIGITS; i++ {
 		for j := 0; j < id.RADIX; j++ {
 			candidates = append(candidates, n.Table.rows[i][j]...)
 		}
 	}
+	rand.Shuffle(len(candidates), func(i, j int) {
+		candidates[i], candidates[j] = candidates[j], candidates[i]
+	})
+
 	selected := make([]Neighbor, 0, count)
 	seen := make(map[string]bool)
+
 	for _, nb := range candidates {
 		if len(selected) >= count {
 			break
@@ -108,6 +118,7 @@ func (n *Node) SelectRandomNeighbors(count int) []Neighbor {
 	}
 	return selected
 }
+
 
 func (n *Node) Probe(address string) (time.Duration, error) {
 	start := time.Now()
@@ -130,4 +141,10 @@ func (n *Node) AddNeighborSafe(nb Neighbor) bool {
 	}
 	nb.Latency = rtt
 	return n.Table.Add(nb)
+}
+
+func (n *Node) GetLocalObjectCount() int {
+	n.objLock.RLock()
+	defer n.objLock.RUnlock()
+	return len(n.LocalObjects)
 }
