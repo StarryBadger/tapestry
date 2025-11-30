@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time" 
+	"sync"
 	pb "tapestry/api/proto"
 	"tapestry/internal/id"
 )
@@ -40,10 +42,22 @@ func (n *Node) Join(bootstrapAddr string) error {
 
 	log.Printf("Found Surrogate Root: %s (%s)", surrogateNeighbor.ID, surrogateNeighbor.Address)
 
-	// Add surrogate (Use AddNeighborSafe to measure latency)
-	n.AddNeighborSafe(surrogateNeighbor)
+	// FIX: Retry adding surrogate to ensure we are connected
+	added := false
+	for i := 0; i < 3; i++ {
+		if n.AddNeighborSafe(surrogateNeighbor) {
+			added = true
+			log.Printf("Added Surrogate %s to routing table.", surrogateNeighbor.ID)
+			break
+		}
+		time.Sleep(500 * time.Millisecond)
+	}
+	
+	if !added {
+		log.Printf("[WARNING] Failed to bond with Surrogate %s. Node might be isolated!", surrogateNeighbor.Address)
+	}
 
-	// Copy Routing Table from Surrogate
+	// Copy Routing Table
 	copyClient, err := GetClient(surrogateNeighbor.Address)
 	if err == nil {
 		defer copyClient.Close()
@@ -59,31 +73,32 @@ func (n *Node) Join(bootstrapAddr string) error {
 }
 
 func (n *Node) populateTable(resp *pb.RTCopyResponse) {
-	// Don't lock here; AddNeighborSafe handles its own locking.
-	// We iterate the response and aggressively try to add everyone.
-	
+	// Use a semaphore to limit concurrent bonding attempts
+	sem := make(chan struct{}, 5) // Max 5 concurrent dials
+	var wg sync.WaitGroup
+
 	count := 0
 	for _, entry := range resp.Entries {
 		for _, nbProto := range entry.Neighbors {
 			nb, _ := NeighborFromProto(nbProto)
-			
-			// optimization: don't add ourselves
-			if nb.ID.Equals(n.ID) {
-				continue
-			}
+			if nb.ID.Equals(n.ID) { continue }
 
-			// Aggressively add. The Table logic handles sorting and trimming.
-			// We run this in goroutines to speed up the join process (parallel pings)
+			wg.Add(1)
 			go func(neighbor Neighbor) {
-				if n.AddNeighborSafe(neighbor) {
-					// We can't safely increment a counter here without atomic/lock, 
-					// but for logging we can just ignore or use atomic.
-				}
+				defer wg.Done()
+				sem <- struct{}{} // Acquire
+				n.AddNeighborSafe(neighbor)
+				<-sem // Release
 			}(nb)
 			count++
 		}
 	}
-	log.Printf("Bootstrap: Processing %d candidates from surrogate table...", count)
+	
+	// Wait for all attempts to finish so we don't spam logs immediately after
+	go func() {
+		wg.Wait()
+		log.Printf("Bootstrap: Processed %d candidates from surrogate table.", count)
+	}()
 }
 
 func (n *Node) notifyNeighbors() {

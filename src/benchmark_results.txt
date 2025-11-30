@@ -1,9 +1,9 @@
-=== Tapestry Benchmark Report [2025-11-30T12:17:06+05:30] ===
+=== Tapestry Benchmark Report [2025-11-30T12:45:27+05:30] ===
 Mode: load | Nodes: 10 | Requests: 500
 --- Load Balance Results ---
-Total Objects Stored (inc replicas): 1460
-Mean Objects/Node: 146.00
-Std Dev: 73.30
-Coefficient of Variation: 0.50
+Total Objects Stored (inc replicas): 1459
+Mean Objects/Node: 145.90
+Std Dev: 64.94
+Coefficient of Variation: 0.45
 RESULT: Good Load Balance
 === End Report ===

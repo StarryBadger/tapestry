@@ -6,9 +6,9 @@ import (
 )
 
 const (
-	MAINTENANCE_INTERVAL = 5 * time.Second
-	POINTER_TIMEOUT      = 15 * time.Second
-	REPUBLISH_INTERVAL   = 10 * time.Second
+	MAINTENANCE_INTERVAL = 20 * time.Second
+	POINTER_TIMEOUT      = 120 * time.Second
+	REPUBLISH_INTERVAL   = 60 * time.Second
 )
 
 func (n *Node) StartMaintenanceLoop() {

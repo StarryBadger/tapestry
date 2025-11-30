@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	// "fmt"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -63,7 +63,22 @@ func addNodeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	runningNodes[port] = cmd
-	nextPort+=1
+	
+	// --- FIX: Monitor Process Exit ---
+	go func(p int, c *exec.Cmd) {
+		c.Wait() // Blocks until the process exits
+		
+		nodesMutex.Lock()
+		delete(runningNodes, p)
+		nodesMutex.Unlock()
+		
+		msg := fmt.Sprintf("Node on port %d exited.", p)
+		log.Println(msg)
+		logChannel <- []byte(msg)
+	}(port, cmd)
+	// --------------------------------
+
+	nextPort++
 	log.Printf("Started new node on gRPC port %d and HTTP port %d", port, httpPort)
 	w.WriteHeader(http.StatusOK)
 }
@@ -136,7 +151,6 @@ func broadcastLogs() {
 }
 
 func main() {
-	// Need to install this dependency: go get github.com/gorilla/websocket
 	go broadcastLogs()
 
 	http.HandleFunc("/add-node", addNodeHandler)

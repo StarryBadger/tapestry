@@ -2,24 +2,30 @@ package test
 
 import (
 	"fmt"
+	"sync/atomic" 
 	"testing"
 	"time"
 
 	"tapestry/internal/node"
 )
 
-const (
-	START_PORT = 10000
-)
+var globalPort int32 = 10000 // Global counter
 
-// --- Test Harness Helpers ---
+func getNextPort() int {
+	return int(atomic.AddInt32(&globalPort, 1))
+}
 
 func createCluster(t *testing.T, count int) []*node.Node {
 	var nodes []*node.Node
 	bootstrapAddr := ""
+	
+	// Base port for this cluster
+	// We increment by 'count' to reserve a block, but here we just grab one by one
+	// Actually, bootstrapping relies on knowing the address.
+	// Let's create the first node to define bootstrap.
 
 	for i := 0; i < count; i++ {
-		port := START_PORT + i
+		port := getNextPort()
 		n, err := node.NewNode(port)
 		if err != nil {
 			t.Fatalf("Failed to create node %d: %v", i, err)
@@ -28,17 +34,23 @@ func createCluster(t *testing.T, count int) []*node.Node {
 		// Start Server
 		go func() {
 			if err := n.Start(); err != nil {
-				// Expected error on Stop()
+				// Expected on stop
 			}
 		}()
-		
-		// Give server a moment to bind
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(50 * time.Millisecond)
 
-		// Join
 		if i > 0 {
-			if err := n.Join(bootstrapAddr); err != nil {
-				t.Fatalf("Node %d failed to join: %v", i, err)
+			// Retry join to be robust against startup timing
+			success := false
+			for attempt := 0; attempt < 3; attempt++ {
+				if err := n.Join(bootstrapAddr); err == nil {
+					success = true
+					break
+				}
+				time.Sleep(100 * time.Millisecond)
+			}
+			if !success {
+				t.Fatalf("Node %d failed to join %s", i, bootstrapAddr)
 			}
 		} else {
 			bootstrapAddr = fmt.Sprintf("localhost:%d", port)
@@ -56,7 +68,9 @@ func stopCluster(nodes []*node.Node) {
 	for _, n := range nodes {
 		n.Stop()
 	}
-	time.Sleep(100 * time.Millisecond) // Cleanup wait
+	// Close connections to release file descriptors
+	node.CloseAllConnections() 
+	time.Sleep(100 * time.Millisecond)
 }
 
 // --- Tests ---

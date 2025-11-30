@@ -58,6 +58,7 @@ func main() {
 	case <-n.ExitChan:
 		log.Println("Node initiated self-shutdown via API.")
 	}
+	node.CloseAllConnections()
 
 	log.Println("Process exiting.")
 	os.Exit(0)

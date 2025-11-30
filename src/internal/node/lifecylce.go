@@ -3,6 +3,7 @@ package node
 import (
 	"context"
 	"log"
+	"sync"
 	"time"
 
 	pb "tapestry/api/proto"
@@ -12,8 +13,8 @@ import (
 func (n *Node) Leave() error {
 	log.Printf("Node %s initiating graceful exit...", n.ID)
 
-	// 1. Redistribute Data (Fix for Issue #1)
-	// Hand off local objects to neighbors so they aren't lost.
+	// 1. Redistribute Data
+	// We MUST wait for this to finish before shutting down.
 	n.redistributeData()
 
 	// 2. Notify Backpointers
@@ -24,8 +25,11 @@ func (n *Node) Leave() error {
 	}
 	n.bpLock.RUnlock()
 
+	var wg sync.WaitGroup
 	for _, bp := range backpointers {
+		wg.Add(1)
 		go func(target Neighbor) {
+			defer wg.Done()
 			client, err := GetClient(target.Address)
 			if err == nil {
 				defer client.Close()
@@ -33,12 +37,23 @@ func (n *Node) Leave() error {
 			}
 		}(bp)
 	}
+	// Wait for notifications with a short timeout so we don't hang forever if a neighbor is down
+	done := make(chan struct{})
+	go func() {
+		wg.Wait()
+		close(done)
+	}()
+	
+	select {
+	case <-done:
+	case <-time.After(2 * time.Second):
+		log.Println("[LEAVE] Backpointer notification timed out")
+	}
 
 	// 3. Signal Shutdown
-	time.Sleep(500 * time.Millisecond) // Allow RPCs to flush
 	n.Stop()
 	
-	// FIX for Issue #2: Signal main.go to exit the process
+	// Signal main.go to exit the process
 	close(n.ExitChan)
 	
 	return nil
@@ -55,21 +70,21 @@ func (n *Node) redistributeData() {
 
 	log.Printf("[LEAVE] Redistributing %d objects to neighbors...", len(n.LocalObjects))
 
-	// Get a list of candidates (Backups)
-	// We try to find 1 neighbor per object to take over.
 	candidates := n.SelectRandomNeighbors(3)
 	if len(candidates) == 0 {
 		log.Println("[LEAVE] No neighbors found! Data will be lost.")
 		return
 	}
 
-	// Round-robin distribution
+	var wg sync.WaitGroup
 	i := 0
 	for _, obj := range n.LocalObjects {
 		target := candidates[i%len(candidates)]
 		i++
 
+		wg.Add(1)
 		go func(t Neighbor, k, d string) {
+			defer wg.Done()
 			client, err := GetClient(t.Address)
 			if err != nil {
 				log.Printf("[LEAVE] Failed to handoff object to %s", t.Address)
@@ -77,15 +92,30 @@ func (n *Node) redistributeData() {
 			}
 			defer client.Close()
 
-			// We use Replicate, which stores and re-publishes
 			_, err = client.Replicate(context.Background(), &pb.ReplicateRequest{
 				Key:  k,
 				Data: d,
 			})
 			if err == nil {
 				log.Printf("[LEAVE] Handed off '%s' to %s", k, t.Address)
+			} else {
+				log.Printf("[LEAVE] Error replicating to %s: %v", t.Address, err)
 			}
 		}(target, obj.Key, obj.Data)
+	}
+	
+	// Wait for all replications to complete or timeout
+	done := make(chan struct{})
+	go func() {
+		wg.Wait()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		log.Println("[LEAVE] Redistribution complete.")
+	case <-time.After(5 * time.Second):
+		log.Println("[LEAVE] Redistribution timed out. Some data may be lost.")
 	}
 }
 
