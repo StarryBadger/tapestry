@@ -1,6 +1,7 @@
 package node
 
 import (
+	"time"
 	pb "tapestry/api/proto"
 	"tapestry/internal/id"
 )
@@ -9,6 +10,7 @@ import (
 type Neighbor struct {
 	ID      id.ID
 	Address string // "IP:Port"
+	Latency time.Duration
 }
 
 // ToProto converts the internal Neighbor struct to the Protobuf message.
@@ -29,5 +31,6 @@ func NeighborFromProto(p *pb.Neighbor) (Neighbor, error) {
 	return Neighbor{
 		ID:      rawID,
 		Address: p.Address,
+		Latency: 0,
 	}, nil
 }

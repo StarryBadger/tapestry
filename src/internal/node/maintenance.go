@@ -44,12 +44,14 @@ func (n *Node) AddBackpointer(ctx context.Context, req *pb.BackpointerRequest) (
 
 	log.Printf("Node %s added backpointer from %s", n.ID, neighbor.ID)
 
-	// Optimization: If this node points to me, it is a valid neighbor!
-	// Add it to my routing table.
-	added := n.Table.Add(neighbor)
-	if added {
-		log.Printf("Optimization: Added backpointer source %s to routing table.", neighbor.ID)
-	}
+	// Optimization: Add backpointer source to routing table with latency check
+	// We run this in a goroutine to not block the RPC response while pinging
+	go func() {
+		added := n.AddNeighborSafe(neighbor)
+		if added {
+			log.Printf("Optimization: Added backpointer source %s to routing table.", neighbor.ID)
+		}
+	}()
 
 	return &pb.Nothing{}, nil
 }
@@ -74,6 +76,8 @@ func (n *Node) NotifyMulticast(ctx context.Context, req *pb.MulticastRequest) (*
 	}
 
 	log.Printf("Node %s received Multicast notification for new node %s", n.ID, newNode.ID)
-	n.Table.Add(newNode)
+	
+	go n.AddNeighborSafe(newNode)
+	
 	return &pb.Nothing{}, nil
 }

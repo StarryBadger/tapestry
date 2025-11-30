@@ -45,9 +45,7 @@ func (n *Node) Join(bootstrapAddr string) error {
 
 	log.Printf("Found Surrogate Root: %s (%s)", surrogateNeighbor.ID, surrogateNeighbor.Address)
 
-	// CRITICAL FIX: Add the surrogate to our routing table immediately!
-	// This ensures we have at least one link into the network.
-	added := n.Table.Add(surrogateNeighbor)
+	added := n.AddNeighborSafe(surrogateNeighbor)
 	if added {
 		log.Printf("Added Surrogate %s to routing table.", surrogateNeighbor.ID)
 	}
@@ -87,6 +85,9 @@ func (n *Node) populateTable(resp *pb.RTCopyResponse) {
 					// Only add if slot is empty (don't overwrite what we might have found)
 					// and don't add ourselves.
 					if len(n.Table.rows[i][j]) == 0 && !nb.ID.Equals(n.ID) {
+						// Note: We bypass AddNeighborSafe here to avoid pinging 
+						// hundreds of nodes during startup, just copy blindly.
+						// In a real optimized system, we'd ping them in background.
 						n.Table.rows[i][j] = append(n.Table.rows[i][j], nb)
 						count++
 					}

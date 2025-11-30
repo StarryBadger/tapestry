@@ -1,6 +1,7 @@
 package node
 
 import (
+	"sort"
 	"sync"
 	"tapestry/internal/id"
 )
@@ -34,50 +35,44 @@ func (rt *RoutingTable) Add(neighbor Neighbor) bool {
 	rt.lock.Lock()
 	defer rt.lock.Unlock()
 
-	// 1. Do not add ourselves
-	if neighbor.ID.Equals(rt.localID) {
-		return false
-	}
+	if neighbor.ID.Equals(rt.localID) { return false }
 
-	// 2. Determine Level (Shared Prefix Length)
 	level := id.SharedPrefixLength(rt.localID, neighbor.ID)
-	
-	// If matching completely, it's a collision or the same node (handled above)
-	if level >= id.DIGITS {
-		return false
-	}
-
-	// 3. Determine Digit at that level
+	if level >= id.DIGITS { return false }
 	digit := neighbor.ID.GetDigit(level)
 
-	// 4. Get current list
 	currentList := rt.rows[level][digit]
 
-	// 5. Check if already exists
-	for _, n := range currentList {
+	// Check for duplicates and update latency if exists
+	for i, n := range currentList {
 		if n.ID.Equals(neighbor.ID) {
-			return false // Already present
+			// Update latency if it changed
+			rt.rows[level][digit][i].Latency = neighbor.Latency
+			// Re-sort needed
+			rt.sortAndTrim(level, digit)
+			return true 
 		}
 	}
 
-	// 6. Insert and Sort (Proximity)
-	// In a real implementation, we would measure RTT here.
-	// For now, we use XOR distance as the metric.
-	updatedList := append(currentList, neighbor)
-	
-	// Simple Insertion Sort based on "Closeness" to localID
-	// Note: The paper implies sorting by distance to *local node* for optimization,
-	// though strictly the slot requirement is matching the prefix.
-	// We keep the K closest nodes that satisfy the prefix constraint.
-	rt.sortByProximity(updatedList)
-
-	// 7. Trim to K size
-	if len(updatedList) > (1 + K_BACKUPS) {
-		updatedList = updatedList[:1+K_BACKUPS]
-	}
-
-	rt.rows[level][digit] = updatedList
+	rt.rows[level][digit] = append(currentList, neighbor)
+	rt.sortAndTrim(level, digit)
 	return true
+}
+
+// sortAndTrim sorts by Latency (Primary metric) and keeps top K
+func (rt *RoutingTable) sortAndTrim(level, digit int) {
+	list := rt.rows[level][digit]
+
+	// Sort by Latency (Ascending)
+	sort.Slice(list, func(i, j int) bool {
+		return list[i].Latency < list[j].Latency
+	})
+
+	// Trim
+	if len(list) > (1 + K_BACKUPS) {
+		list = list[:1+K_BACKUPS]
+	}
+	rt.rows[level][digit] = list
 }
 
 // Remove removes a neighbor from the table (e.g., on disconnect)

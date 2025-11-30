@@ -6,7 +6,8 @@ import (
 	"log"
 	"net"
 	"sync"
-	
+	"time"
+
 	pb "tapestry/api/proto"
 	"tapestry/internal/id"
 	"google.golang.org/grpc"
@@ -15,32 +16,18 @@ import (
 type Node struct {
 	pb.UnimplementedNodeServiceServer
 
-	// Identity
-	ID      id.ID
-	Port    int
-	Address string // "localhost:Port"
-
-	// Network
-	GrpcServer *grpc.Server
-	Listener   net.Listener
-
-	// Tapestry Core
-	Table *RoutingTable
-
-	// Backpointers (Who points to me?)
-	// Used for Optimizing the Mesh and Voluntary Delete
-	Backpointers map[string]Neighbor // Key: Hex ID string
-	bpLock       sync.RWMutex
-
-	// Decentralized Object Location (DOLR)
-	// LocationPointers: Objects cached on this node pointing to the publisher
-	// Map: ObjectID -> List of Publishers
+	ID               id.ID
+	Port             int
+	Address          string 
+	GrpcServer       *grpc.Server
+	Listener         net.Listener
+	Table            *RoutingTable
+	Backpointers     map[string]Neighbor
+	bpLock           sync.RWMutex
 	LocationPointers map[id.ID][]Neighbor
 	lpLock           sync.RWMutex
-
-	// Local Object Store (The actual data this node hosts)
-	LocalObjects map[id.ID]Object
-	objLock      sync.RWMutex
+	LocalObjects     map[id.ID]Object
+	objLock          sync.RWMutex
 }
 
 // NewNode creates a new Tapestry node.
@@ -119,4 +106,37 @@ func (n *Node) SelectRandomNeighbors(count int) []Neighbor {
 		}
 	}
 	return selected
+}
+
+// Probe measures the RTT to a neighbor address.
+func (n *Node) Probe(address string) (time.Duration, error) {
+	start := time.Now()
+	
+	client, err := GetClient(address)
+	if err != nil {
+		return 0, err
+	}
+	defer client.Close()
+	
+	_, err = client.Ping(context.Background(), &pb.Nothing{})
+	if err != nil {
+		return 0, err
+	}
+	
+	return time.Since(start), nil
+}
+
+// AddNeighborSafe measures latency and adds the neighbor.
+// Returns true if the table was updated.
+func (n *Node) AddNeighborSafe(nb Neighbor) bool {
+	// 1. Measure Latency
+	rtt, err := n.Probe(nb.Address)
+	if err != nil {
+		return false // Node unreachable
+	}
+	
+	nb.Latency = rtt
+	
+	// 2. Add to Table (Table handles sorting)
+	return n.Table.Add(nb)
 }
