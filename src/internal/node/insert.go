@@ -4,22 +4,50 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time" 
+	"math/rand"
+	"time"
 	"sync"
+
 	pb "tapestry/api/proto"
 	"tapestry/internal/id"
 )
 
-// Join connects the node to the Tapestry network via a bootstrap node.
-func (n *Node) Join(bootstrapAddr string) error {
-	log.Printf("Node %s joining via %s...", n.ID, bootstrapAddr)
+// Join connects the node to the Tapestry network via a list of potential bootstrap nodes.
+func (n *Node) Join(bootstrapAddrs []string) error {
+	// 1. Shuffle the list to spread load and avoid thundering herd on the first node
+	rand.Shuffle(len(bootstrapAddrs), func(i, j int) {
+		bootstrapAddrs[i], bootstrapAddrs[j] = bootstrapAddrs[j], bootstrapAddrs[i]
+	})
 
-	bsClient, err := GetClient(bootstrapAddr)
-	if err != nil {
-		return fmt.Errorf("failed to contact bootstrap: %v", err)
+	var bsClient *TapestryClient
+	var err error
+	var connectedAddr string
+
+	// 2. Iterate until we find a live gateway
+	for _, addr := range bootstrapAddrs {
+		if addr == n.Address { continue } // Don't join via self
+
+		log.Printf("Attempting to join via %s...", addr)
+		bsClient, err = GetClient(addr)
+		if err == nil {
+			// Check if it's actually responsive
+			_, pingErr := bsClient.Ping(context.Background(), &pb.Nothing{})
+			if pingErr == nil {
+				connectedAddr = addr
+				break // Success!
+			}
+			bsClient.Close()
+		}
+	}
+
+	if connectedAddr == "" {
+		return fmt.Errorf("failed to connect to any bootstrap node in list: %v", bootstrapAddrs)
 	}
 	defer bsClient.Close()
 
+	log.Printf("Successfully bonded with Gateway: %s", connectedAddr)
+
+	// 3. Find Surrogate Root for My ID
 	req := &pb.RouteRequest{
 		TargetId: &pb.NodeID{Bytes: n.ID.Bytes()},
 		SourceId: &pb.NodeID{Bytes: n.ID.Bytes()},
@@ -35,14 +63,7 @@ func (n *Node) Join(bootstrapAddr string) error {
 		surrogateNeighbor, _ = NeighborFromProto(resp.NextHop)
 	}
 
-	if surrogateNeighbor.Address == "" {
-		log.Println("Surrogate lookup returned empty, using bootstrap as surrogate.")
-		return fmt.Errorf("surrogate lookup failed")
-	}
-
-	log.Printf("Found Surrogate Root: %s (%s)", surrogateNeighbor.ID, surrogateNeighbor.Address)
-
-	// FIX: Retry adding surrogate to ensure we are connected
+	// Retry adding surrogate (Bonding)
 	added := false
 	for i := 0; i < 3; i++ {
 		if n.AddNeighborSafe(surrogateNeighbor) {

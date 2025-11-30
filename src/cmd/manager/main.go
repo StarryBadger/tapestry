@@ -30,6 +30,31 @@ var (
 	logChannel = make(chan []byte)
 )
 
+func getBootstrapList() string {
+	var ports []string
+	for port := range runningNodes {
+		ports = append(ports, strconv.Itoa(port))
+	}
+	// Join them
+	if len(ports) == 0 {
+		return ""
+	}
+	// Pass up to 5 random nodes to keep command line short? 
+	// Or just pass all. For 20-50 nodes, passing all is fine.
+	return fmt.Sprintf("%s", join(ports, ","))
+}
+
+// Simple string join helper
+func join(strs []string, sep string) string {
+	if len(strs) == 0 { return "" }
+	if len(strs) == 1 { return strs[0] }
+	res := strs[0]
+	for _, s := range strs[1:] {
+		res += sep + s
+	}
+	return res
+}
+
 // addNodeHandler starts a new tapestry-node process.
 func addNodeHandler(w http.ResponseWriter, r *http.Request) {
 	nodesMutex.Lock()
@@ -37,16 +62,14 @@ func addNodeHandler(w http.ResponseWriter, r *http.Request) {
 
 	port := nextPort
 	httpPort := port + 1000 // Separate port for the node's own HTTP API
-	boot := 0
-	if port != bootstrapPort {
-		boot = bootstrapPort
-	}
+	
+	bootList := getBootstrapList()
 
-	// Command to execute the tapestry-node binary
+	// Command to execute
 	cmd := exec.Command("go", "run", "tapestry/cmd/tapestry-node",
 		"-port", strconv.Itoa(port),
 		"-httpport", strconv.Itoa(httpPort),
-		"-boot", strconv.Itoa(boot))
+		"-boot", bootList)
 
 	// Capture the output of the node process to stream it as logs
 	stdout, _ := cmd.StdoutPipe()

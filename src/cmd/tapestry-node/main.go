@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -15,7 +16,8 @@ import (
 func main() {
 	portPtr := flag.Int("port", 0, "gRPC port for the node.")
 	httpPortPtr := flag.Int("httpport", 0, "HTTP port for the node's API.")
-	bootPtr := flag.Int("boot", 0, "Bootstrap node gRPC port (0 if none).")
+	// Changed to string to accept "8000,8001,8002"
+	bootPtr := flag.String("boot", "", "Comma-separated list of bootstrap ports.")
 	flag.Parse()
 
 	if *portPtr == 0 {
@@ -28,38 +30,47 @@ func main() {
 	}
 
 	go func() {
-		if err := n.Start(); err != nil {
-			// This might error when n.Stop() is called, which is expected
-			// log.Printf("gRPC server stopped: %v", err)
-		}
+		if err := n.Start(); err != nil {}
 	}()
 
 	go n.StartHttpServer(*httpPortPtr)
 
-	if *bootPtr != 0 && *bootPtr != *portPtr {
-		time.Sleep(2 * time.Second)
-		bootstrapAddr := fmt.Sprintf("localhost:%d", *bootPtr)
-		if err := n.Join(bootstrapAddr); err != nil {
-			log.Fatalf("Failed to join network via %s: %v", bootstrapAddr, err)
+	// Handle Bootstrapping
+	if *bootPtr != "" {
+		// Allow previous nodes to start
+		time.Sleep(1 * time.Second) 
+		
+		ports := strings.Split(*bootPtr, ",")
+		var bootstrapAddrs []string
+		for _, p := range ports {
+			if p != "" {
+				bootstrapAddrs = append(bootstrapAddrs, fmt.Sprintf("localhost:%s", p))
+			}
 		}
-		log.Printf("Node %s successfully joined network.", n.ID)
+
+		if len(bootstrapAddrs) > 0 {
+			if err := n.Join(bootstrapAddrs); err != nil {
+				log.Fatalf("Failed to join network: %v", err)
+			}
+			log.Printf("Node %s successfully joined network.", n.ID)
+		}
 	} else {
-		log.Printf("Node %s started as standalone/bootstrap.", n.ID)
+		log.Printf("Node %s started as standalone (Genesis node).", n.ID)
 	}
 
-	// Wait for shutdown signal OR internal exit
+	// Cleanup logic
 	shutdownChan := make(chan os.Signal, 1)
 	signal.Notify(shutdownChan, syscall.SIGINT, syscall.SIGTERM)
 
 	select {
 	case <-shutdownChan:
 		log.Println("Received OS interrupt. Leaving network...")
-		n.Leave() // Trigger graceful leave on Ctrl+C
+		n.Leave() 
 	case <-n.ExitChan:
 		log.Println("Node initiated self-shutdown via API.")
 	}
-	node.CloseAllConnections()
 
+	node.CloseAllConnections()
 	log.Println("Process exiting.")
 	os.Exit(0)
 }

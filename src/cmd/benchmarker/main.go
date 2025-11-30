@@ -32,7 +32,6 @@ func main() {
 	concurrency := flag.Int("workers", 10, "Number of concurrent workers (perf mode)")
 	flag.Parse()
 
-	// 1. Setup Result File
 	var err error
 	resultFile, err = os.Create("benchmark_results.txt")
 	if err != nil {
@@ -43,11 +42,9 @@ func main() {
 	report(fmt.Sprintf("=== Tapestry Benchmark Report [%s] ===", time.Now().Format(time.RFC3339)))
 	report(fmt.Sprintf("Mode: %s | Nodes: %d | Requests: %d", *mode, *nodeCount, *reqCount))
 
-	// 2. Setup Cluster
 	bm := setupCluster(*nodeCount)
 	defer bm.teardown()
 
-	// 3. Run Benchmark
 	switch *mode {
 	case "hops":
 		bm.measureHops(*reqCount)
@@ -65,11 +62,8 @@ func main() {
 	fmt.Println("\n\nDone! Results saved to 'benchmark_results.txt'")
 }
 
-// Helper to write to both log and file
 func report(msg string) {
-	// Print to console (wrapped in log to keep timestamp context if needed, or fmt for clean output)
 	log.Println(msg) 
-	// Write to file
 	if resultFile != nil {
 		resultFile.WriteString(msg + "\n")
 	}
@@ -92,7 +86,7 @@ func setupCluster(count int) *Benchmarker {
 		time.Sleep(50 * time.Millisecond) 
 
 		if i > 0 {
-			if err := n.Join(bootstrapAddr); err != nil {
+			if err := n.Join([]string{bootstrapAddr}); err != nil {
 				log.Printf("Node %d join failed: %v", i, err)
 			}
 		} else {
@@ -102,7 +96,7 @@ func setupCluster(count int) *Benchmarker {
 	}
 	
 	log.Println("Cluster stable. Waiting for table population...")
-	time.Sleep(5 * time.Second) // Increased wait for larger clusters
+	time.Sleep(5 * time.Second) 
 	return bm
 }
 
@@ -111,6 +105,7 @@ func (bm *Benchmarker) teardown() {
 	for _, n := range bm.nodes {
 		n.Stop()
 	}
+	node.CloseAllConnections()
 }
 
 // --- Set 3: Hop Count Distribution ---
@@ -150,10 +145,7 @@ func traceRoute(startNode *node.Node, targetID id.ID) (int, bool) {
 	currentAddr := startNode.Address
 	currentID := startNode.ID
 	violated := false
-	
-	// Metric: Shared Prefix Length (Should strictly increase or stay same)
 	prevPrefixLen := id.SharedPrefixLength(currentID, targetID)
-	// Metric: XOR Distance (Should generally decrease)
 	prevDist := id.Distance(currentID, targetID)
 
 	for hops < 20 { 
@@ -173,24 +165,14 @@ func traceRoute(startNode *node.Node, targetID id.ID) (int, bool) {
 		var nextID id.ID
 		copy(nextID[:], resp.NextHop.Id.Bytes)
 		
-		// 1. Check Prefix Progress
 		currPrefixLen := id.SharedPrefixLength(nextID, targetID)
-		
-		// 2. Check XOR Distance
 		currDist := id.Distance(nextID, targetID)
 
-		// Monotonicity Logic:
-		// We expect prefix length to INCREASE.
-		// IF prefix length is the SAME (Surrogate Step), we expect XOR distance to DECREASE (or digit to be closer).
-		
 		if currPrefixLen < prevPrefixLen {
-			// This is a hard violation. We moved backwards in the tree.
 			violated = true
 		} else if currPrefixLen == prevPrefixLen {
-			// Surrogate routing step.
-			// We strictly expect the distance to decrease here.
 			if currDist.Cmp(prevDist) >= 0 {
-				// violated = true // Still noisy in sparse networks, but technically a violation
+				// violated = true 
 			}
 		}
 
@@ -207,13 +189,11 @@ func traceRoute(startNode *node.Node, targetID id.ID) (int, bool) {
 func (bm *Benchmarker) measureLoadBalance(objects int) {
 	report("--- Load Balance Results ---")
 	
-	// Publish random objects
 	for i := 0; i < objects; i++ {
 		src := bm.nodes[rand.Intn(len(bm.nodes))]
 		key := fmt.Sprintf("bench-obj-%d", i)
-		// We fire and forget to speed up test setup, but wait at end
 		go src.StoreAndPublish(key, "payload")
-		if i % 100 == 0 { time.Sleep(10 * time.Millisecond) } // Throttle slightly
+		if i % 100 == 0 { time.Sleep(10 * time.Millisecond) }
 	}
 	
 	log.Println("Waiting for propagation...")

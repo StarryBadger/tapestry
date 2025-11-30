@@ -43,7 +43,8 @@ func createCluster(t *testing.T, count int) []*node.Node {
 			// Retry join to be robust against startup timing
 			success := false
 			for attempt := 0; attempt < 3; attempt++ {
-				if err := n.Join(bootstrapAddr); err == nil {
+                // Pass slice
+				if err := n.Join([]string{bootstrapAddr}); err == nil {
 					success = true
 					break
 				}
