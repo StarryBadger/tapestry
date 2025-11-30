@@ -9,19 +9,15 @@ import (
 )
 
 // GetNextHop determines the next node in the path towards a target ID.
-// It implements the core routing logic described in the Tapestry papers.
 func (n *Node) GetNextHop(ctx context.Context, req *pb.RouteRequest) (*pb.RouteResponse, error) {
-	// FIX: Do not use id.Parse here. Copy raw bytes directly.
 	var targetID id.ID
 	if len(req.TargetId.Bytes) != id.BYTES {
 		return nil, fmt.Errorf("invalid target ID length: %d", len(req.TargetId.Bytes))
 	}
 	copy(targetID[:], req.TargetId.Bytes)
 
-	// 2. Compute Next Hop locally
 	nextHop, isRoot := n.computeNextHop(targetID)
 
-	// 3. Construct Response
 	return &pb.RouteResponse{
 		NextHop: nextHop.ToProto(),
 		IsRoot:  isRoot,
@@ -41,7 +37,7 @@ func (n *Node) computeNextHop(target id.ID) (Neighbor, bool) {
 	// 2. Determine the level of matching prefix
 	level := id.SharedPrefixLength(n.ID, target)
 
-	// If we match all digits (should be caught by step 1, but safety check)
+	// If we match all digits, we are the node.
 	if level >= id.DIGITS {
 		return Neighbor{ID: n.ID, Address: n.Address}, true
 	}
@@ -52,6 +48,7 @@ func (n *Node) computeNextHop(target id.ID) (Neighbor, bool) {
 	// 4. Primary Lookup: Do we have a node with this digit?
 	primaryCandidates := n.Table.rows[level][desiredDigit]
 	if len(primaryCandidates) > 0 {
+		// Return the closest primary neighbor
 		return primaryCandidates[0], false
 	}
 
@@ -59,15 +56,22 @@ func (n *Node) computeNextHop(target id.ID) (Neighbor, bool) {
 	// Iterate (digit + 1, digit + 2 ...) mod RADIX.
 	for offset := 1; offset < id.RADIX; offset++ {
 		surrogateDigit := (desiredDigit + offset) % id.RADIX
-		surrogateCandidates := n.Table.rows[level][surrogateDigit]
+		
+		// CRITICAL FIX: Check if WE are the match for this surrogate digit.
+		// If the routing table doesn't have the desired digit, and the next closest
+		// digit in the namespace is OUR digit, then WE are the surrogate root.
+		if n.ID.GetDigit(level) == surrogateDigit {
+			return Neighbor{ID: n.ID, Address: n.Address}, true
+		}
 
+		// Check Routing Table for this surrogate digit
+		surrogateCandidates := n.Table.rows[level][surrogateDigit]
 		if len(surrogateCandidates) > 0 {
 			return surrogateCandidates[0], false
 		}
 	}
 
-	// 6. Surrogate Root
-	// If NO entries exist in this level (except potentially ourselves),
-	// then WE are the root for this object.
+	// 6. Fallback (Should be unreachable if logic above is correct, 
+    // but implies we are the only node we know of)
 	return Neighbor{ID: n.ID, Address: n.Address}, true
 }
