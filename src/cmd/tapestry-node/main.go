@@ -22,28 +22,22 @@ func main() {
 		log.Fatal("Port is required")
 	}
 
-	// Create Node
 	n, err := node.NewNode(*portPtr)
 	if err != nil {
 		log.Fatalf("Failed to create node: %v", err)
 	}
 
-	// Start gRPC server in goroutine
 	go func() {
 		if err := n.Start(); err != nil {
-			log.Fatalf("gRPC server failed: %v", err)
+			// This might error when n.Stop() is called, which is expected
+			// log.Printf("gRPC server stopped: %v", err)
 		}
 	}()
 
-	// Start HTTP server in goroutine
 	go n.StartHttpServer(*httpPortPtr)
 
-	// Join the network if a bootstrap port is provided
-	// Note: The manager passes just the port integer. We construct the address.
 	if *bootPtr != 0 && *bootPtr != *portPtr {
-		// Wait a second for the bootstrap node to be ready if we are launching simultaneously
 		time.Sleep(2 * time.Second)
-		
 		bootstrapAddr := fmt.Sprintf("localhost:%d", *bootPtr)
 		if err := n.Join(bootstrapAddr); err != nil {
 			log.Fatalf("Failed to join network via %s: %v", bootstrapAddr, err)
@@ -53,12 +47,18 @@ func main() {
 		log.Printf("Node %s started as standalone/bootstrap.", n.ID)
 	}
 
-	// Wait for shutdown signal
+	// Wait for shutdown signal OR internal exit
 	shutdownChan := make(chan os.Signal, 1)
 	signal.Notify(shutdownChan, syscall.SIGINT, syscall.SIGTERM)
-	<-shutdownChan
 
-	log.Println("Shutting down...")
-	n.Stop()
-	log.Println("Node stopped.")
+	select {
+	case <-shutdownChan:
+		log.Println("Received OS interrupt. Leaving network...")
+		n.Leave() // Trigger graceful leave on Ctrl+C
+	case <-n.ExitChan:
+		log.Println("Node initiated self-shutdown via API.")
+	}
+
+	log.Println("Process exiting.")
+	os.Exit(0)
 }

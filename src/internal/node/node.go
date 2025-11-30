@@ -15,7 +15,7 @@ import (
 
 // PointerEntry wraps a Neighbor with a timestamp for Soft-State
 type PointerEntry struct {
-	Neighbor Neighbor
+	Neighbor    Neighbor
 	LastUpdated time.Time
 }
 
@@ -24,17 +24,18 @@ type Node struct {
 
 	ID               id.ID
 	Port             int
-	Address          string 
+	Address          string
 	GrpcServer       *grpc.Server
 	Listener         net.Listener
 	Table            *RoutingTable
 	Backpointers     map[string]Neighbor
 	bpLock           sync.RWMutex
 	LocationPointers map[id.ID][]*PointerEntry
-	lpLock           sync.RWMutex	
+	lpLock           sync.RWMutex
 	LocalObjects     map[id.ID]Object
 	objLock          sync.RWMutex
-	stopChan chan struct{}
+	stopChan chan struct{} // For internal threads (maintenance)
+	ExitChan chan struct{} // NEW: For main.go to know we are done
 }
 
 func NewNode(port int) (*Node, error) {
@@ -57,59 +58,49 @@ func NewNode(port int) (*Node, error) {
 		LocationPointers: make(map[id.ID][]*PointerEntry),
 		LocalObjects:     make(map[id.ID]Object),
 		stopChan:         make(chan struct{}),
+		ExitChan:         make(chan struct{}), // Initialize
 	}
 
 	pb.RegisterNodeServiceServer(n.GrpcServer, n)
 	log.Printf("Created Node %s at %s", n.ID.String(), n.Address)
-	
+
 	return n, nil
 }
 
+// ... (Start, Stop, Ping, SelectRandomNeighbors, Probe, AddNeighborSafe remain unchanged) ...
+// Copy them from previous steps if needed, but only NewNode changed here.
+
 func (n *Node) Start() error {
-	// Start Background Maintenance Threads
 	go n.StartMaintenanceLoop()
 	go n.StartRepublishLoop()
-
 	log.Printf("Starting gRPC server on %s", n.Address)
 	return n.GrpcServer.Serve(n.Listener)
 }
 
 func (n *Node) Stop() {
-	close(n.stopChan) // Signal threads to stop
+	close(n.stopChan)
 	n.GrpcServer.GracefulStop()
 }
 
-// Ping is a basic liveness check
 func (n *Node) Ping(ctx context.Context, req *pb.Nothing) (*pb.Nothing, error) {
 	return &pb.Nothing{}, nil
 }
 
-// SelectRandomNeighbors picks 'count' distinct neighbors from the routing table.
 func (n *Node) SelectRandomNeighbors(count int) []Neighbor {
 	n.Table.lock.RLock()
 	defer n.Table.lock.RUnlock()
-
 	var candidates []Neighbor
-	// Collect all neighbors
 	for i := 0; i < id.DIGITS; i++ {
 		for j := 0; j < id.RADIX; j++ {
 			candidates = append(candidates, n.Table.rows[i][j]...)
 		}
 	}
-
-	// Shuffle (simple version) or just pick first 'count' distinct ones
-	// In a real app, use math/rand to shuffle. 
-    // Since map iteration is random-ish in Go, and we appended in order, 
-    // let's just pick distinct ones.
-    
 	selected := make([]Neighbor, 0, count)
 	seen := make(map[string]bool)
-
 	for _, nb := range candidates {
 		if len(selected) >= count {
 			break
 		}
-		// Don't pick ourselves or duplicates
 		if !nb.ID.Equals(n.ID) && !seen[nb.ID.String()] {
 			selected = append(selected, nb)
 			seen[nb.ID.String()] = true
@@ -118,35 +109,25 @@ func (n *Node) SelectRandomNeighbors(count int) []Neighbor {
 	return selected
 }
 
-// Probe measures the RTT to a neighbor address.
 func (n *Node) Probe(address string) (time.Duration, error) {
 	start := time.Now()
-	
 	client, err := GetClient(address)
 	if err != nil {
 		return 0, err
 	}
 	defer client.Close()
-	
 	_, err = client.Ping(context.Background(), &pb.Nothing{})
 	if err != nil {
 		return 0, err
 	}
-	
 	return time.Since(start), nil
 }
 
-// AddNeighborSafe measures latency and adds the neighbor.
-// Returns true if the table was updated.
 func (n *Node) AddNeighborSafe(nb Neighbor) bool {
-	// 1. Measure Latency
 	rtt, err := n.Probe(nb.Address)
 	if err != nil {
-		return false // Node unreachable
+		return false
 	}
-	
 	nb.Latency = rtt
-	
-	// 2. Add to Table (Table handles sorting)
 	return n.Table.Add(nb)
 }
