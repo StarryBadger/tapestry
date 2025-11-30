@@ -14,7 +14,6 @@ import (
 	"google.golang.org/grpc"
 )
 
-// PointerEntry wraps a Neighbor with a timestamp for Soft-State
 type PointerEntry struct {
 	Neighbor    Neighbor
 	LastUpdated time.Time
@@ -76,7 +75,6 @@ func (n *Node) Start() error {
 	return n.GrpcServer.Serve(n.Listener)
 }
 
-// Stop stops the node gracefully. It is safe to call multiple times.
 func (n *Node) Stop() {
 	n.shutdownOnce.Do(func() {
 		close(n.stopChan)
@@ -147,4 +145,10 @@ func (n *Node) GetLocalObjectCount() int {
 	n.objLock.RLock()
 	defer n.objLock.RUnlock()
 	return len(n.LocalObjects)
+}
+
+func (n *Node) GetLocationPointerCount() int {
+	n.lpLock.RLock()
+	defer n.lpLock.RUnlock()
+	return len(n.LocationPointers)
 }

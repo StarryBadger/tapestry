@@ -21,7 +21,6 @@ import (
 
 const START_PORT = 20000
 
-// JSONReport holds raw data for Python analysis
 type JSONReport struct {
 	Mode     string `json:"mode"`
 	Nodes    int    `json:"nodes"`
@@ -33,8 +32,8 @@ type JSONReport struct {
 
 	NodeStorage map[string]int `json:"node_storage"`
 	CV          float64        `json:"cv"`
-	Jain        float64        `json:"jain"` // NEW
-	Gini        float64        `json:"gini"` // NEW
+	Jain        float64        `json:"jain"` 
+	Gini        float64        `json:"gini"`
 
 	PutLatencies []float64 `json:"put_latencies"`
 	GetLatencies []float64 `json:"get_latencies"`
@@ -80,7 +79,6 @@ func main() {
 	case "hops":
 		reportData.HopCounts, reportData.AvgHops = bm.measureHops(*reqCount)
 	case "load":
-		// Updated to return multiple metrics
 		reportData.NodeStorage, reportData.CV, reportData.Jain, reportData.Gini = bm.measureLoadBalance(*reqCount)
 	case "perf":
 		reportData.PutLatencies, reportData.GetLatencies, reportData.Throughput = bm.measurePerformance(*reqCount, *concurrency)
@@ -107,7 +105,6 @@ func report(msg string) {
 	}
 }
 
-// --- Cluster Setup ---
 func setupCluster(count int) *Benchmarker {
 	bm := &Benchmarker{}
 	var activeAddrs []string
@@ -146,7 +143,6 @@ func (bm *Benchmarker) teardown() {
 	node.CloseAllConnections()
 }
 
-// --- Metrics ---
 
 func (bm *Benchmarker) measureHops(samples int) ([]int, float64) {
 	report("--- Hop Count Results ---")
@@ -196,28 +192,32 @@ func traceRoute(startNode *node.Node, targetID id.ID) int {
 	return hops
 }
 
-// UPDATED: measureLoadBalance calculates CV, Jain's Index, and Gini Coefficient
 func (bm *Benchmarker) measureLoadBalance(objects int) (map[string]int, float64, float64, float64) {
-	report("--- Load Balance Results ---")
+	report("--- Load Balance Results (Metadata/Pointers) ---")
+	
 	for i := 0; i < objects; i++ {
 		src := bm.nodes[rand.Intn(len(bm.nodes))]
 		key := fmt.Sprintf("obj-%d", i)
 		go src.StoreAndPublish(key, "data")
-		if i%100 == 0 {
-			time.Sleep(10 * time.Millisecond)
-		}
+		if i%100 == 0 { time.Sleep(10 * time.Millisecond) }
 	}
-	time.Sleep(5 * time.Second)
+	
+	report("Waiting for pointers to propagate...")
+	time.Sleep(5 * time.Second) 
 
 	storage := make(map[string]int)
 	counts := []float64{}
+	
+	totalPointers := 0
+
 	for _, n := range bm.nodes {
-		c := float64(n.GetLocalObjectCount())
+		c := float64(n.GetLocationPointerCount())
+		
 		storage[n.ID.String()] = int(c)
 		counts = append(counts, c)
+		totalPointers += int(c)
 	}
 
-	// 1. Calculate CV
 	sum := 0.0
 	sumSq := 0.0
 	for _, c := range counts {
@@ -225,6 +225,7 @@ func (bm *Benchmarker) measureLoadBalance(objects int) (map[string]int, float64,
 		sumSq += c * c
 	}
 	mean := sum / float64(len(counts))
+	
 	variance := 0.0
 	for _, c := range counts {
 		variance += math.Pow(c-mean, 2)
@@ -232,36 +233,24 @@ func (bm *Benchmarker) measureLoadBalance(objects int) (map[string]int, float64,
 	stdDev := math.Sqrt(variance / float64(len(counts)))
 
 	cv := 0.0
-	if mean > 0 {
-		cv = stdDev / mean
-	}
+	if mean > 0 { cv = stdDev / mean }
 
-	// 2. Calculate Jain's Fairness Index
-	// J = (sum(x_i))^2 / (n * sum(x_i^2))
 	jain := 0.0
-	if sumSq > 0 {
-		jain = (sum * sum) / (float64(len(counts)) * sumSq)
-	}
+	if sumSq > 0 { jain = (sum * sum) / (float64(len(counts)) * sumSq) }
 
-	// 3. Calculate Gini Coefficient
-	// G = (2 * sum(i * x_i)) / (n * sum(x_i)) - (n + 1) / n
-	// Requires sorted array
 	sortedCounts := make([]float64, len(counts))
 	copy(sortedCounts, counts)
 	sort.Float64s(sortedCounts)
-
 	giniNumerator := 0.0
-	n := float64(len(sortedCounts))
+	n_len := float64(len(sortedCounts))
 	for i, x := range sortedCounts {
-		// i is 0-indexed, formula uses 1-based rank
 		giniNumerator += (float64(i + 1) * x)
 	}
-
 	gini := 0.0
-	if sum > 0 {
-		gini = (2*giniNumerator)/(n*sum) - (n+1)/n
-	}
+	if sum > 0 { gini = (2*giniNumerator)/(n_len*sum) - (n_len+1)/n_len }
 
+	report(fmt.Sprintf("Total Pointers Stored: %d", totalPointers))
+	report(fmt.Sprintf("Mean Pointers/Node: %.2f", mean))
 	report(fmt.Sprintf("Coefficient of Variation: %.4f", cv))
 	report(fmt.Sprintf("Jain's Fairness Index:  %.4f", jain))
 	report(fmt.Sprintf("Gini Coefficient:       %.4f", gini))
@@ -315,7 +304,7 @@ func (bm *Benchmarker) measurePerformance(requests int, workers int) ([]float64,
 func (bm *Benchmarker) measureChurn(requests int, workers int) (int, int) {
 	report("--- Churn Resilience Results ---")
 
-	liveStatus := make([]int32, len(bm.nodes)) // 0=alive, 1=dead
+	liveStatus := make([]int32, len(bm.nodes))
 
 	stopChaos := make(chan struct{})
 	go func() {
